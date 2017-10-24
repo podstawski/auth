@@ -1,15 +1,35 @@
-let WebKameleonAuthObj = function() {
+const google_auth_obj = require('./google.auth.js');
+
+let WebKameleonAuthObj = function(w,d) {
+    var server;
+    var s=d.getElementsByTagName('script');
+    for(var i=s.length-1;i>=0;i--) {
+        if (s[i].src&&s[i].src.indexOf('webkameleon-auth-client.js')>0) {
+            server=s[i].src.replace(/\/webkameleon-auth-client\.js.*/,'');
+            
+            var callback_i=s[i].src.indexOf('callback=');
+            if (callback_i>0) {
+                var callback=s[i].src.substr(callback_i+9);
+                if (callback.indexOf('&')>0) {
+                    callback=callback.substr(0,callback.indexOf('&'));
+                }
+                if (typeof(window[callback])=='function') setTimeout(window[callback],10);
+                
+            }
+            break;
+        }
+    }
+    const google_auth = google_auth_obj(server);
     
     
     
     return {
-        GoogleAuth: function() {
-            alert(8);
-        }
+        GoogleAuth: google_auth.authorize,
+        GoogleUser: google_auth.user,
+        GoogleLogout: google_auth.logout
     }
     
 }
 
-
-window.WebKameleonAuth = new WebKameleonAuthObj();
+window.WebKameleonAuth = new WebKameleonAuthObj(window,window.document);
 

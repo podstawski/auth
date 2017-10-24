@@ -101,7 +101,15 @@ class googleController extends Controller {
         
         return ['aaa'=>'kota'];
     }
+    
+    public function get_auth () {
+        return Bootstrap::$main->session('auth');
+    }
 
+    public function get_logout() {
+        return Bootstrap::$main->logout();
+    }
+    
     protected function standarize_email($email,$error=true)
     {
         $email=mb_convert_case($email,MB_CASE_LOWER);
