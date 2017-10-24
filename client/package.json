@@ -1,0 +1,23 @@
+{
+  "name": "webkameleon-auth-client",
+  "version": "1.0.0",
+  "description": "JS client for authorization and google operations",
+  "main": "index.js",
+  "scripts": {
+    "pack-js": "webpack"
+  },
+  "author": "Piotr Podstawski",
+  "license": "ISC",
+  "devDependencies": {
+    "css-loader": "^0.28.7",
+    "exports-loader": "^0.6.4",
+    "file-loader": "^1.1.5",
+    "image-webpack-loader": "^3.4.2",
+    "imports-loader": "^0.7.1",
+    "style-loader": "^0.19.0",
+    "webpack": "^3.8.1"
+  },
+  "dependencies": {
+    "jquery": "^3.2.1"
+  }
+}
