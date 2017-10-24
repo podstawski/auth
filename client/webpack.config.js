@@ -4,8 +4,8 @@ module.exports = {
 	entry: './src/start',
 	devtool: 'source-map',
 	output: {
-		filename: 'site.js',
-		path: path.resolve(__dirname, 'public/')
+		filename: 'webkameleon-auth-client.js',
+		path: path.resolve(__dirname, '../public/')
 	},
 	module: {
 		loaders: [{
