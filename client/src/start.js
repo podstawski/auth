@@ -1,4 +1,5 @@
-const google_auth_obj = require('./google.auth.js');
+const google_auth_obj = require('./google.auth.js'),
+    youtube_obj = require('./youtube.js');
 
 let WebKameleonAuthObj = function(w,d) {
     var server;
@@ -19,14 +20,19 @@ let WebKameleonAuthObj = function(w,d) {
             break;
         }
     }
-    const google_auth = google_auth_obj(server);
+    const google_auth = google_auth_obj(server),
+            youtube = youtube_obj(server);
     
     
     
     return {
         GoogleAuth: google_auth.authorize,
         GoogleUser: google_auth.user,
-        GoogleLogout: google_auth.logout
+        GoogleLogout: google_auth.logout,
+        YoutubeSaveEvent: youtube.eventSave,
+        YoutubeGetEvent: youtube.eventGet,
+        YoutubeStartEvent: youtube.eventStart
+        
     }
     
 }

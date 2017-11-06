@@ -4,3 +4,4 @@ webkameleon-auth-client.js.map
 package-lock.json
 client_credentials.json
 users
+events

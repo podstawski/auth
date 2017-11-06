@@ -3,14 +3,18 @@ const $=require('jquery');
 
 module.exports = function (server) {
     
-    const getUser = function(cb) {
+    const get =function(url,cb) {
         $.ajax({
-            url:server+'/google/auth',
+            url:server+url,
             xhrFields: {
                 withCredentials: true
             }
         }).done(cb);
         return true;
+    }
+    
+    const getUser = function(cb) {
+        return get('/google/auth',cb);
     }
     
     return {
@@ -29,13 +33,7 @@ module.exports = function (server) {
             return true;
         } ,
         logout: function(cb) {
-            $.ajax({
-                url:server+'/google/logout',
-                xhrFields: {
-                    withCredentials: true
-                }
-            }).done(cb);
-            return true;
+            return get('/google/logout',cb);
         }
     }
 }
