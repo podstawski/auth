@@ -2,6 +2,11 @@
 
 
 class googleController extends Controller {
+    
+    private static $scopes = [
+        'youtube'=>'https://www.googleapis.com/auth/youtube',
+        'drive'=>Google_Service_Drive::DRIVE
+    ];
 
     public function get() {
         $scopes="openid profile email";
@@ -99,7 +104,7 @@ class googleController extends Controller {
             $this->redirect($url);
         }
         
-        return ['aaa'=>'kota'];
+        return [];
     }
     
     public function get_auth () {
@@ -119,6 +124,67 @@ class googleController extends Controller {
         }	
 	
         return $email;
+    }
+    
+    protected function require_user() {
+        $auth=Bootstrap::$main->session('auth');
+        if (!isset($auth['id']) || !$auth['id']) $this->error('9');
+        return $auth;
+    }
+    
+    public function get_scopes() {
+        $auth=$this->require_user();
+ 
+        $user=new userModel($auth['id']);
+        return $user->scopes();
+    }
+    
+    public function get_scope() {
+        $auth=$this->require_user();
+        
+        if ($this->id) {
+            Bootstrap::$main->session('scope',$this->id);
+            Header('Location:'.str_replace('/'.$this->id,'',$_SERVER['REQUEST_URI']));
+            die();
+        }
+        
+        if (!Bootstrap::$main->session('scope')) return $this->error(4);
+        
+        $user=new userModel($auth['id']);
+        
+        $scopes=[];
+        foreach (explode(',',Bootstrap::$main->session('scope')) AS $scope) {
+            if (isset($this::$scopes[$scope])) $scopes=array_unique(array_merge($scopes,explode(',',$this::$scopes[$scope])));
+        }
+        $scopes=implode(',',$scopes);
+        
+        $client = new Google_Client();
+        
+        $client->setAuthConfig(__DIR__.'/../configs/client_credentials.json');
+        $client->addScope($scopes);
+        $client->setAccessType("offline");
+        $client->setIncludeGrantedScopes(true); 
+        $redirect_uri = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+        if ($pos=strpos($redirect_uri,'?')) $redirect_uri=substr($redirect_uri,0,$pos);
+        $client->setRedirectUri($redirect_uri);
+        
+        $client->setApprovalPrompt('force');
+
+        
+        if (isset($_GET['code'])) {
+            $client->authenticate($_GET['code']);
+            $token=$client->getAccessToken();
+            $user->storeToken($token,Bootstrap::$main->session('scope'));
+        } else {
+
+            $authUrl = $client->createAuthUrl();
+            Header('Location: '.filter_var($authUrl,FILTER_SANITIZE_URL));
+            die();
+        }
+        
+        
+      
+        return true;
     }
 
 }
