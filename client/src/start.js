@@ -31,7 +31,8 @@ let WebKameleonAuthObj = function(w,d) {
         GoogleLogout: google_auth.logout,
         YoutubeSaveEvent: youtube.eventSave,
         YoutubeGetEvent: youtube.eventGet,
-        YoutubeStartEvent: youtube.eventStart
+        YoutubeStartEvent: youtube.eventStart,
+        YoutubeDate: youtube.date
         
     }
     

@@ -26,20 +26,30 @@
 
 <form method="POST" id="eventSave">
 	<input type="hidden" name="_sid" value="<?php echo $sid?>"/><br/>
-	<input type="text" placeholder="event id" name="event" value="<?php echo $costxt?>"/><br/>
-	<input type="text" placeholder="hangout id" name="hangout" value=""/><br/>
+	<input type="text" placeholder="youtube id" title="youtube id" name="event" value="<?php echo $costxt?>"/><br/>
+	<input type="text" placeholder="hangout id" title="hangout id" name="hangout" value=""/><br/>
 	<textarea name="users" placeholder="Dodaj uytkownikow"></textarea>
 	<br/>
+	<input type="text" placeholder="cena ONLINE" title="cena ONLINE" name="price_online" value=""/><br/>
+	<input type="text" placeholder="cena OFFLINE" title="cena OFFLINE" name="price_offline" value=""/><br/>
 	<input type="button" value="go!" class="go"/>
 
 </form>
 
 <script>
+	function objectifyForm() {
+		var formArray = $('#eventSave').serializeArray();
+		var returnArray = {};
+		for (var i = 0; i < formArray.length; i++){
+			if (formArray[i]['name'].substr(0,1)=='_') continue;
+			returnArray[formArray[i]['name']] = formArray[i]['value'];
+		}
+		return returnArray;
+	}
+	
 	$('#eventSave input.go').click(function(){
-		WebKameleonAuth.YoutubeSaveEvent($('#eventSave input[name="event"]').val(),{
-			hangout:$('#eventSave input[name="hangout"]').val(),
-			users:$('#eventSave textarea[name="users"]').val()
-		},function(d){
+
+		WebKameleonAuth.YoutubeSaveEvent($('#eventSave input[name="event"]').val(),objectifyForm(),function(d){
 			if (typeof(d.data)!='undefined' && typeof(d.data.hangout)!='undefined') {
 				$('#eventSave').submit();
 			}
@@ -50,14 +60,16 @@
 	function WebKameleonAuthReady() {
 		WebKameleonAuth.YoutubeGetEvent('<?php echo $costxt?>',function(d){
 			
-			if (typeof(d.data)!='undefined' && typeof(d.data.hangout)!='undefined') {
-                $('#eventSave input[name="hangout"]').val(d.data.hangout);
-				
-            }
+			if (typeof(d.data)!='undefined') for (var k in d.data) {
 			
-			if (typeof(d.data)!='undefined' && typeof(d.data.users)!='undefined') {
-				$('#eventSave textarea[name="users"]').val(d.data.users.join("\n"));
+				if (typeof(d.data[k])=='object') {
+					$('#eventSave textarea[name="'+k+'"]').val(d.data[k].join("\n"));
+                    
+                } else {
+					$('#eventSave input[name="'+k+'"]').val(d.data[k]);
+				}
 			}
+		
 			
 		});
 	}
