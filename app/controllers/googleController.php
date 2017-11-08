@@ -128,7 +128,7 @@ class googleController extends Controller {
     
     protected function require_user() {
         $auth=Bootstrap::$main->session('auth');
-        if (!isset($auth['id']) || !$auth['id']) $this->error('9');
+        if (!isset($auth['id']) || !$auth['id']) $this->error(9);
         return $auth;
     }
     
@@ -141,6 +141,8 @@ class googleController extends Controller {
     
     public function get_scope() {
         $auth=$this->require_user();
+		
+		if (isset($_GET['redirect'])) Bootstrap::$main->session('scope_redirect',$_GET['redirect']);
         
         if ($this->id) {
             Bootstrap::$main->session('scope',$this->id);
@@ -148,7 +150,7 @@ class googleController extends Controller {
             die();
         }
         
-        if (!Bootstrap::$main->session('scope')) return $this->error(4);
+        if (!Bootstrap::$main->session('scope')) return $this->error(3);
         
         $user=new userModel($auth['id']);
         
@@ -175,6 +177,8 @@ class googleController extends Controller {
             $client->authenticate($_GET['code']);
             $token=$client->getAccessToken();
             $user->storeToken($token,Bootstrap::$main->session('scope'));
+			$redir=Bootstrap::$main->session('scope_redirect');
+			if ($redir) Header('Location:'.$redir);
         } else {
 
             $authUrl = $client->createAuthUrl();
@@ -186,5 +190,10 @@ class googleController extends Controller {
       
         return true;
     }
+	
+	public function get_lang() {
+		if ($this->id) Error::lang($this->id);
+		return Error::lang();
+	}
 
 }

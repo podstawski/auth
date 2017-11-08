@@ -24,6 +24,15 @@
     
     
 function WebKameleonAuthReady() {
+    
+    WebKameleonAuth.GoogleLang('<?php echo $lang;?>',function(){
+        WebKameleonAuth.YoutubeStartEvent('.<?php echo $costxt?>','edi-<?php echo $sid?>');
+    });
+    
+    
+    
+    
+    return;
     $('.ev-yt').addClass('iframe-container').html('');
     WebKameleonAuth.YoutubeStartEvent('<?php echo $costxt?>',function(d){
         $('.ev-yt').removeClass('iframe-container');
@@ -31,10 +40,10 @@ function WebKameleonAuthReady() {
         if (typeof(d.yt)=='undefined') {
             if (typeof(d.error)!='undefined') {
                 switch (d.error.number) {
-                    case 3:
+                    case 7:
                         $('.ev-yt').html('<a class="pay btn">Material platny, prosimy o oplacenie.</a>');
                         break;
-                    case 5:
+                    case 8:
                         var da=new Date(d.ctx);
                         var txt='Zaczynamy '+WebKameleonAuth.YoutubeDate('DD-MM-YYYY HH:mm',d.ctx);
                     

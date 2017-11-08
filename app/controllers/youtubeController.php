@@ -6,7 +6,7 @@ class youtubeController extends Controller {
 
     public function init() {
         $auth=Bootstrap::$main->session('auth');
-        if (!isset($auth['id']) || !$auth['id']) $this->error('9');
+        if (!isset($auth['id']) || !$auth['id']) $this->error(9);
         
         $this->me=strtolower($auth['email']);
         $this->myid=$auth['id'];
@@ -22,13 +22,19 @@ class youtubeController extends Controller {
     }
     
     public function get_event() {
-        $id=$this->id;
-        if (!$id) $this->error(2);
-        $event=$this->_get_event($id);
-        if (!isset($event->items) || count($event->items)==0) $this->error(2);
+        if (!$this->id) $this->error(5);
+        
+        $eventdata=new eventModel($this->id);
+        $event=$eventdata->get();
+        
+        if (!isset($event['event'])) $this->error(6);
+        $id=$event['event'];
+        
+        $_event=$this->_get_event($id);
+        
+        if (!isset($_event->items) || count($_event->items)==0) $this->error(6);
           
-        $eventdata=new eventModel($id);
-        return ['yt'=>$event->items[0],'data'=>$eventdata->get()];
+        return ['yt'=>$_event->items[0],'data'=>$event];
     }
     
     protected function enableEmedded($id) {
@@ -41,6 +47,7 @@ class youtubeController extends Controller {
         $contentDetails->enableEmbed=true;
         $broadcast->setContentDetails($contentDetails);
 
+        //mydie($broadcast);
         
         $this->service->liveBroadcasts->update('contentDetails', $broadcast);            
                 
@@ -73,12 +80,17 @@ class youtubeController extends Controller {
     }
     
     public function post_event() {
-        $id=$this->id;
-        if (!$id) $this->error(2);
-        $event=$this->_get_event($id);
-        if (!isset($event->items) || count($event->items)==0) $this->error(2);
         
-        $eventdata=new eventModel($id);
+        if (!$this->id) $this->error(5);
+        $eventdata=new eventModel($this->id);
+        $event=$eventdata->get();
+        if (!isset($this->data['event'])) $this->error(6);
+        $id=$this->data['event'];
+        
+        $_event=$this->_get_event($id);
+        if (!isset($_event->items) || count($_event->items)==0) $this->error(6);
+        
+        
         
         if (isset($this->data['users'])) {
             $users=strtolower($this->data['users']);
@@ -90,11 +102,12 @@ class youtubeController extends Controller {
             if (array_search($this->me,$this->data['users'])===false) $this->data['users'][]=$this->me;
         }
         
-        $this->enableEmedded($id);
-        
         $this->data['author']=$this->myid;
+        $data=$eventdata->save($this->data);
+        //$this->enableEmedded($id);
         
-        return ['yt'=>$event->items[0],'data'=>$eventdata->save($this->data)];
+        
+        return ['yt'=>$_event->items[0],'data'=>$data];
         
     }
     
@@ -105,13 +118,15 @@ class youtubeController extends Controller {
             $user=new userModel($author);
             $this->client->setAccessToken($user->token());
         }
+        
+        
         $ret = $this->service->liveBroadcasts->listLiveBroadcasts(
             'id,snippet',
             array(
                 'id' => $id
             )
         );
-        if ($author!=null) {
+        if ($author!=null && $token) {
             $this->client->setAccessToken($token);
         }
         
@@ -121,12 +136,12 @@ class youtubeController extends Controller {
     public function get_start() {
         $id=$this->id;
             
-        if (!$id) $this->error(2);
+        if (!$id) $this->error(5);
         $eventdata=new eventModel($id);
         $event=$eventdata->get();
         
     
-        if (array_search($this->me,$event['users'])===false) $this->error(3);
+        if (array_search($this->me,$event['users'])===false) $this->error(7);
 
         
         $snippet=$this->_get_event($id,$event['author']!=$this->myid?$event['author']:null)->items[0]->snippet;
@@ -145,12 +160,12 @@ class youtubeController extends Controller {
             ];    
         }
         //mydie(date('d-m-Y H:i',strtotime($snippet->scheduledStartTime)));
-        $this->error(5,$snippet->scheduledStartTime);
+        $this->error(8,$snippet->scheduledStartTime);
     }
 
     public function get_stop() {
         $id=$this->id;
-        if (!$id) $this->error(2);
+        if (!$id) $this->error(5);
         
         $eventdata=new eventModel($id);
         $event=$eventdata->get();

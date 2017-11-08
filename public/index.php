@@ -5,7 +5,12 @@
     
     
     allow_origin(['webkameleon.com','homeo24.eu']);
-    autoload([__DIR__.'/../app/classes',__DIR__.'/../app/models',__DIR__.'/../app/controllers']);
+    
+    autoload([__DIR__.'/../app/classes',
+              __DIR__.'/../app/models',
+              __DIR__.'/../app/controllers'
+    ]);
+    
     $config=json_config(__DIR__.'/../app/configs/application.json');
     $method=http_method();
     

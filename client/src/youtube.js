@@ -26,6 +26,24 @@ module.exports = function (server) {
         return true;
     }
     
+    const eventStart = function(button,evid) {
+        $(button).click(function(e){
+            var btn=$(this);
+            get('/youtube/start/'+evid,function(d){
+            });
+            
+        
+        });
+        retuen;
+        get('/youtube/start/'+id,function(d){
+                cb(d);
+                if(typeof(d['yt'])!='undefined') setTimeout(function(){
+                    get('/youtube/stop/'+id,function(){
+                    })
+                },6000);            
+            });
+    }
+    
     return {
         eventSave: function(id,data,cb) {
             return post('/youtube/event/'+id,data,cb);
@@ -33,15 +51,7 @@ module.exports = function (server) {
         eventGet: function(id,cb) {
             return get('/youtube/event/'+id,cb);
         },
-        eventStart: function(id,cb) {
-            return get('/youtube/start/'+id,function(d){
-                cb(d);
-                if(typeof(d['yt'])!='undefined') setTimeout(function(){
-                    get('/youtube/stop/'+id,function(){
-                    })
-                },6000);            
-            });
-        },
+        eventStart: eventStart,
         date: function (format,date) {
             return moment(date).format(format);
         }

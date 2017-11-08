@@ -5,36 +5,111 @@
 		$webtd->save();
 	}
 	
-	
-	if (isset($_POST['_sid']) && $_POST['_sid']==$sid && isset($_POST['event'])) {
+	if (isset($_POST['_sid']) && $_POST['_sid']==$sid && isset($_POST['button'])) {
 		$webtd=new webtdModel($sid);
-		$webtd->costxt=$_POST['event'];
+		$webtd->costxt=$_POST['button'];
 		$webtd->save();
 	}
 	
 ?>
 
 <style>
+	#eventSave {
+		display: none;
+		margin-top: 30px;
+	}
 	#eventSave input {
 		width: 50%
 	}
+	#eventSave .error {
+		border: solid 1px red;
+	}
+	#eventSave a.token {
+		float: right;
+		background-color: red;
+	}
 	#eventSave textarea {
-		width: 50%;
+		height: 50px;
+	}
+	#eventSave div textarea:focus {
 		height: 300px;
 	}
+	
+	#eventSave div {
+	  position: relative;
+	  margin: 0 0 30px 0;
+	  font-family: impact;
+	  font-size: 16px
+	}
+	#eventSave div input,#eventSave div textarea {
+	  padding: 10px;
+	  width: 50%;
+	  transition: all 1s;
+	  border: 2px solid #999;
+	  font-size: 17px;
+	  color: #666
+	}
+	#eventSave div label {
+	  position: absolute;
+	  left:0px;
+	  top: 0;
+	  line-height:15px;
+	  transition: all 0.5s;
+	  overflow: hidden;
+	  color: #999;
+	  white-space: nowrap;
+	  z-index: 1;
+	  opacity: 0;
+	}
+	#eventSave div input:focus + label,
+	#eventSave div textarea:focus + label{
+	  opacity: 1;
+	  top: -18px;  
+	}
+	#eventSave div input:focus,
+	#eventSave div textarea:focus{
+	  outline: none;
+	  border-color: rgba(82, 168, 236, 0.8);
+	}	
+	
+	
+	
 </style>
 
 <form method="POST" id="eventSave">
-	<input type="hidden" name="_sid" value="<?php echo $sid?>"/><br/>
-	<input type="text" placeholder="youtube id" title="youtube id" name="event" value="<?php echo $costxt?>"/><br/>
-	<input type="text" placeholder="hangout id" title="hangout id" name="hangout" value=""/><br/>
-	<textarea name="users" placeholder="Dodaj uytkownikow"></textarea>
-	<br/>
-	<input type="text" placeholder="cena ONLINE" title="cena ONLINE" name="price_online" value=""/><br/>
-	<input type="text" placeholder="cena OFFLINE" title="cena OFFLINE" name="price_offline" value=""/><br/>
-	<input type="button" value="go!" class="go"/>
+	<input type="hidden" name="_sid" value="<?php echo $sid?>"/>
+	
+	<div>
+		<input type="text" placeholder="youtube id"  name="event" value="<?php echo $costxt?>"/>
+		<label for="event">Youtube id:</label>
+	</div>
+	<div>
+		<input type="text" placeholder="hangout id" name="hangout" value=""/>
+		<label for="hangout">Hangout id:</label>
+	</div>
+	<div>
+		<textarea name="users" placeholder="Dodaj użytkownikow"></textarea>
+		<label for="users">Dodaj użytkowników, którzy mogą oglądać:</label>
+	</div>
+	<div>
+		<input type="text" placeholder="Cena w czasie zajęć" name="price_online" value=""/>
+		<label for="price_online">Cena w czasie zajęć:</label>
+	</div>
+	<div>
+		<input type="text" placeholder="Cena za dostęp ex post" name="price_offline" value=""/>
+		<label for="price_offline">Cena za dostęp ex post:</label>
+	</div>
+	<div>
+		<input type="text" placeholder="Klasa przycisku/linku" title="klasa przycisku" name="button" value=""/>
+		<label for="button">Klasa przycisku/linku:</label>
+		
+	</div>
+	<a class="btn token">Token</a>
+	<a class="btn save">Zapisz</a>
 
 </form>
+
+<a class="authorlogin btn">Zaloguj!</a>
 
 <script>
 	function objectifyForm() {
@@ -47,18 +122,48 @@
 		return returnArray;
 	}
 	
-	$('#eventSave input.go').click(function(){
+	$('#eventSave a.token').click(function(){
+		WebKameleonAuth.GoogleToken('youtube',function(){
+		});
+	});
+	
+	$('#eventSave a.save').click(function(){
 
-		WebKameleonAuth.YoutubeSaveEvent($('#eventSave input[name="event"]').val(),objectifyForm(),function(d){
-			if (typeof(d.data)!='undefined' && typeof(d.data.hangout)!='undefined') {
-				$('#eventSave').submit();
+		var a=$(this);
+		var t=a.text();
+		a.text('...');
+		$('#eventSave input').removeClass('error');
+		WebKameleonAuth.YoutubeSaveEvent('edi-<?php echo $sid;?>',objectifyForm(),function(d){
+			
+			if (typeof(d.data)!='undefined' && typeof(d.data.event)!='undefined') {
+				a.text(t);
+				var starts=$('.'+d.data.button);
+				
+				if (d.data.button.length==0 || starts.length==0) {
+                    a.text('Nie istnieją przyciski klasy '+d.data.button);
+					$('#eventSave input[name="button"]').addClass('error');
+                } else {
+					$('#eventSave').submit();
+				}
+				
+				
 			}
+			if (typeof(d.error)!='undefined') {
+                a.text(d.error.info);
+				setTimeout(function(){
+					a.text(t)
+				},5000);
+            }
 		});
 		return false;
 	});
-	<?php if($costxt):?>
-	function WebKameleonAuthReady() {
-		WebKameleonAuth.YoutubeGetEvent('<?php echo $costxt?>',function(d){
+	function WebKameleonAuthReady(u) {
+		WebKameleonAuth.GoogleLang('<?php echo $lang;?>');
+		if (u.id==null) return;
+		$('.authorlogin').hide();
+		$('#eventSave').fadeIn(500);
+	
+		WebKameleonAuth.YoutubeGetEvent('edi-<?php echo $sid?>',function(d){
 			
 			if (typeof(d.data)!='undefined') for (var k in d.data) {
 			
@@ -68,10 +173,18 @@
                 } else {
 					$('#eventSave input[name="'+k+'"]').val(d.data[k]);
 				}
+			} else {
+				if (typeof(data.error)!='undefined') {
+                    alert(data.error.info);
+                }
 			}
 		
-			
-		});
+		});		
+		
+
 	}
-	<?php endif;?>
+	
+	$('.authorlogin').click(function(){
+		WebKameleonAuth.GoogleAuth(WebKameleonAuthReady);
+	});
 </script>
