@@ -71,10 +71,12 @@ module.exports = function (server) {
                 ch_x=0;
             }
             
+            var stopLoop=false;
             yt_h=ch_h=Math.round((yt_w*9)/16)+120;
             var win_ch=null;
             var win_yt=openWindow('','webkameleon_auth_yt',yt_x,yt_y,yt_w,yt_h,function(){
                 if (win_ch!=null) win_ch.close();
+                stopLoop=true;
             });
             
             
@@ -94,8 +96,32 @@ module.exports = function (server) {
                             win_ch.location.href=server+'/youtube/chat/'+evid;
                         }
                         win_yt.document.write('<div align="center"><img id="yt" onclick="top.opener.'+fname+'()" src="http://auth.webkameleon.com/img/yt.jpg" width="99%" style="cursor:pointer"/></div>')
+                    
+                        const changeLoop=function() {
+                            if (stopLoop) return;
+                            get('/youtube/change/'+evid,function(d){
+                                if (typeof(d.hangout)!='undefined' && d.hangout.length>0) {
+                                    win_yt.location.href=getHOurl(d.hangout);
+                                    post('/youtube/change/'+evid,{hangout:''},function(){
+                                        setTimeout(changeLoop,1000);
+                                    });
+                                } else if (typeof(d.yt)!='undefined' && d.yt.length>0) {
+                                    win_yt.location.href=getYTurl(d.yt);
+                                    post('/youtube/change/'+evid,{yt:''},function(){
+                                        setTimeout(changeLoop,1000);
+                                    });
+                                } else {
+                                    setTimeout(changeLoop,1000);
+                                }
+                                
+                                
+                            });
+                        }
+                        changeLoop();
+                    
                     } else {
                         win_yt.location.href=yt_url;
+                        
                         
                     }
                     
@@ -152,9 +178,9 @@ module.exports = function (server) {
         get('/youtube/join/'+id,function(d){
             if (typeof(d.hangout)!='undefined') {
                 
-                var id='a'+Date.now();
-                $('body').append('<a href="'+getHOurl(d.hangout)+'" id="'+id+'" target="webkameleon_auth_yt">a</a>');
-                $('#'+id).click();
+                post('/youtube/change/'+id,{hangout:d.hangout},function(){
+                });
+                
                 if (typeof(cb)=='function') cb();
                 return;
             }

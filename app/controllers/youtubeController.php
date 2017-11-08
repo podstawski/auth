@@ -219,15 +219,25 @@ class youtubeController extends Controller {
         if (!isset($event['queue'])) $event['queue']=[];
         if (!isset($event['join'])) $event['join']=[];
         
-        if (in_array($this->me,$event['join'])) return ['hangout'=>event.hangout];
-        
-        if (in_array($this->me,$event['queue'])) return ['hangout'=>event.hangout];
-        
+        if (in_array($this->me,$event['join'])) return ['hangout'=>$event['hangout']];
+        if (in_array($this->me,$event['queue'])) return ['hangout'=>$event['hangout']];
         if (in_array($this->me,$event['queue'])) return true;
         
         $event['queue'][]=$this->me;
         $eventdata->save($event);
         return true;
+    }
+    
+    public function get_change() {
+        if (!$this->id) $this->error(5);
+        
+        return Bootstrap::$main->session('yt.'.$this->id);
+    }
+    
+    public function post_change() {
+        if (!$this->id) $this->error(5);
+        
+        return Bootstrap::$main->session('yt.'.$this->id,$this->data);
     }
     
     public function get_my_life_events() {
