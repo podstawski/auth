@@ -88,8 +88,12 @@
 		<label for="hangout">Hangout id:</label>
 	</div>
 	<div>
-		<textarea name="users" placeholder="Dodaj użytkownikow"></textarea>
+		<textarea name="users" placeholder="Dodaj użytkowników, którzy mogą oglądać"></textarea>
 		<label for="users">Dodaj użytkowników, którzy mogą oglądać:</label>
+	</div>
+	<div>
+		<textarea name="speakers" placeholder="Dodaj użytkownikow, którzy występują"></textarea>
+		<label for="speakers">Dodaj użytkowników, którzy występują:</label>
 	</div>
 	<div>
 		<input type="text" placeholder="Cena w czasie zajęć" name="price_online" value=""/>
@@ -159,6 +163,10 @@
 	});
 	function WebKameleonAuthReady(u) {
 		WebKameleonAuth.GoogleLang('<?php echo $lang;?>');
+		
+		<?php include(__DIR__.'/event.php');?>
+		
+		
 		if (u.id==null) return;
 		$('.authorlogin').hide();
 		$('#eventSave').fadeIn(500);
@@ -187,4 +195,6 @@
 	$('.authorlogin').click(function(){
 		WebKameleonAuth.GoogleAuth(WebKameleonAuthReady);
 	});
+	
+
 </script>

@@ -1,35 +1,19 @@
-<a name="online"></a>
-<div class="row">
-    <div class="col-md-9 ev-yt">
-    </div>
-    <div class="col-md-3 ev-ch">
-        
-    </div>
-</div>
-
-<style>
-    .ev-yt {
-        color: red;
-        text-align: center;
-        height: 300px;
-    }
-    .ev-yt a{
-
-        cursor: pointer;
-    }
-</style>
-<?php if($costxt):?>
-
-<script>
-    
-    
+<?php
+    $scr = $this->mode==1 || !$this->mode;    
+?>
+<?php if($scr):?>
+<script>  
 function WebKameleonAuthReady() {
     
+<?php endif;?>
+
+
     WebKameleonAuth.GoogleLang('<?php echo $lang;?>',function(){
         WebKameleonAuth.YoutubeStartEvent('.<?php echo $costxt?>','edi-<?php echo $sid?>');
     });
     
     
+<?php if($scr):?>  
     
     
     return;

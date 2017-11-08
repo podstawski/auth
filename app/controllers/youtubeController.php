@@ -53,16 +53,13 @@ class youtubeController extends Controller {
                 
     }
     
-    protected function setVideoStatus($id,$status='private') {
+    protected function setVideoStatus($id,$author,$status='private') {
         
-        $eventdata=new eventModel($id);
-        $event=$eventdata->get();
         $token=null;
         
-        
-        if ($event['author']!=$this->myid) {
+        if ($author!=$this->myid) {
             $token=$this->client->getAccessToken();
-            $user=new userModel($event['author']);
+            $user=new userModel($author);
             $this->client->setAccessToken($user->token());
         }
  
@@ -102,6 +99,14 @@ class youtubeController extends Controller {
             if (array_search($this->me,$this->data['users'])===false) $this->data['users'][]=$this->me;
         }
         
+        if (isset($this->data['speakers'])) {
+            $speakers=strtolower($this->data['speakers']);
+            $speakers=preg_replace("/[ ,;\r\t]/","\n",$speakers);
+            $speakers=trim(preg_replace("/[\n]+/","\n",$speakers));
+            if (strlen($speakers)==0) $this->data['speakers']=[];
+            else $this->data['speakers']=array_unique(explode("\n",$speakers));
+        }
+        
         $this->data['author']=$this->myid;
         $data=$eventdata->save($this->data);
         //$this->enableEmedded($id);
@@ -133,49 +138,73 @@ class youtubeController extends Controller {
         return $ret;
     }
     
-    public function get_start() {
-        $id=$this->id;
-            
-        if (!$id) $this->error(5);
-        $eventdata=new eventModel($id);
+    public function get_start() {      
+        if (!$this->id) $this->error(5);
+        $eventdata=new eventModel($this->id);
         $event=$eventdata->get();
         
+        if (!isset($event['event'])) $this->error(6);
+        $id=$event['event'];
     
-        if (array_search($this->me,$event['users'])===false) $this->error(7);
-
-        
         $snippet=$this->_get_event($id,$event['author']!=$this->myid?$event['author']:null)->items[0]->snippet;
+        
+    
+        if (!isset($event['users']) || array_search($this->me,$event['users'])===false) {
+            $this->error(7,$snippet->actualEndTime?$event['price_offline']:$event['price_online']);
+        }
+        
         
         
         if ($snippet->actualStartTime) {
-            $this->setVideoStatus($id,'unlisted');
             
+            $this->setVideoStatus($id,$event['author'],'unlisted');
             
             $event['start']=time();
             $eventdata->save($event);
             
-            return [
-                'yt'=>'<iframe width="100%" height="300" src="http://www.youtube.com/embed/'.$id.'?autoplay=1" frameborder="0" allowfullscreen></iframe>',
-                'chat'=>'<iframe width="100%" height="300" src="https://www.youtube.com/live_chat?v='.$id.'&embed_domain=ORIGIN" frameborder="0" allowfullscreen></iframe>'
-            ];    
+            $ret=['yt'=>$id,'chat'=>true,'close'=>$snippet->actualEndTime?true:false];
+            
+            if ($snippet->actualEndTime) $ret['chat'] = false;
+            elseif ($event['author']==$this->myid) $ret['hangout']=$event['hangout'];
+            
+            return $ret;
+                
         }
         //mydie(date('d-m-Y H:i',strtotime($snippet->scheduledStartTime)));
         $this->error(8,$snippet->scheduledStartTime);
     }
 
     public function get_stop() {
-        $id=$this->id;
-        if (!$id) $this->error(5);
+        if (!$this->id) $this->error(5);
         
-        $eventdata=new eventModel($id);
+        $eventdata=new eventModel($this->id);
         $event=$eventdata->get();
+        $id=$event['event'];
         if (time()-$event['start']<5) return false;
         
         $snippet=$this->_get_event($id,$event['author']!=$this->myid?$event['author']:null)->items[0]->snippet;
         
-        
-        if ($snippet->actualEndTime) $this->setVideoStatus($id,'private');
+        if ($snippet->actualEndTime) $this->setVideoStatus($id,$event['author'],'private');
         return true;
+    }
+    
+    public function get_chat() {
+        $lang=Error::lang();
+        
+        if (!$this->id) $this->error(5);
+        $eventdata=new eventModel($this->id);
+        $event=$eventdata->get();
+        
+        if (!isset($event['event'])) $this->error(6);
+        $id=$event['event'];
+    
+    
+        if (!isset($event['users']) || array_search($this->me,$event['users'])===false) {
+            $this->error(7);
+        }   
+        
+        include(__DIR__.'/../views/chat.phtml');
+        die();
     }
     
     public function get_my_life_events() {

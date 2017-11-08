@@ -1,0 +1,22 @@
+<html lang="<?php echo $lang;?>">
+<head>
+    <meta charset="utf-8">
+    <title>Chat</title>
+    
+    <style>
+        body: {
+            padding:0;
+            margin:0;
+        }
+    </style>
+</head>
+<body>
+    <iframe width="100%" height="50%" src="https://www.youtube.com/live_chat?v=<?php echo $id;?>&embed_domain=auth.webkameleon.com" frameborder="0"></iframe>
+    
+</body>
+<script>
+    var chatStart = function() {
+    }
+</script>
+<script src="/client.js?callback=chatStart"></script>
+</html>

@@ -11,7 +11,7 @@ class Error {
         6  => ['en'=>'Event not found','pl'=>'Nie znaleziono wydarzenia'],
         7  => ['en'=>'Please pay','pl'=>'Prosimy zapłacić'],
         8  => ['en'=>'Broadcast starts','pl'=>'Transmisja zaczyna się'],
-        9  => ['en'=>'User not logged in','pl'=>'Nie zalogowano'],
+        9  => ['en'=>'Please log in','pl'=>'Proszę się zalogować'],
         
     );
 
