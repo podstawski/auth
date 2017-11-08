@@ -1,5 +1,6 @@
 const google_auth_obj = require('./google.auth.js'),
-    youtube_obj = require('./youtube.js');
+    youtube_obj = require('./youtube.js'),
+    jquery=require('jquery');
 
 let WebKameleonAuthObj = function(w,d) {
     var server;
@@ -34,8 +35,10 @@ let WebKameleonAuthObj = function(w,d) {
         
         YoutubeSaveEvent: youtube.eventSave,
         YoutubeGetEvent: youtube.eventGet,
-        YoutubeStartEvent: youtube.eventStart
+        YoutubeStartEvent: youtube.eventStart,
+        YoutubeJoinEvent: youtube.eventJoin,
         
+        jquery: jquery
     }
     
 }

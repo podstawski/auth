@@ -29,17 +29,22 @@ module.exports = function (server) {
     const openWindow = function(url,name,x,y,w,h,cb) {
         var win=window.open(url,name,'left='+x+',top='+y+',width='+w+',height='+h+',scrollbars=no,menubar=no,status=no,titlebar=no,toolbar=no,location=no');
         var to=function() {
-            
             if (win.window!=null) {
                 setTimeout(to,200);
                 return;
             }
-            
-            if (typeof(cb)=='function') cb();
+            cb();
         }
         
-        if (win!=null) setTimeout(to,200);
+        if (win!=null && typeof(cb)=='function') setTimeout(to,200);
 		return win;
+    }
+    
+    const getYTurl = function(id) {
+        return 'https://www.youtube.com/watch?v='+id+'?autoplay=1';
+    }
+    const getHOurl = function(id) {
+        return 'https://hangouts.google.com/hangouts/_/ytl/'+id;
     }
     
     const eventStart = function(button,evid) {
@@ -76,14 +81,17 @@ module.exports = function (server) {
             get('/youtube/start/'+evid,function(d){
                 
                 if (typeof(d.yt)!='undefined') {
-                    var yt_url='https://www.youtube.com/watch?v='+d.yt+'?autoplay=1';
-                    
+                    var yt_url=getYTurl(d.yt);
+                    if (typeof(d.hangout)!='undefined')
+                        yt_url=getHOurl(d.hangout);
                     if (d.chat && ch_x>0) {
                         var fname='top_'+Math.random();
                         fname=fname.replace('\.','_');
                         window[fname] = function () {
                             win_ch=openWindow('','webkameleon_auth_ch',ch_x,ch_y,ch_w,ch_h);
+                            
                             win_yt.location.href=yt_url;
+                            win_ch.location.href=server+'/youtube/chat/'+evid;
                         }
                         win_yt.document.write('<div align="center"><img id="yt" onclick="top.opener.'+fname+'()" src="http://auth.webkameleon.com/img/yt.jpg" width="99%" style="cursor:pointer"/></div>')
                     } else {
@@ -140,6 +148,21 @@ module.exports = function (server) {
         
     }
     
+    const eventJoin = function (id,cb) {
+        get('/youtube/join/'+id,function(d){
+            if (typeof(d.hangout)!='undefined') {
+                
+                var id='a'+Date.now();
+                $('body').append('<a href="'+getHOurl(d.hangout)+'" id="'+id+'" target="webkameleon_auth_yt">a</a>');
+                $('#'+id).click();
+                if (typeof(cb)=='function') cb();
+                return;
+            }
+            
+            setTimeout(eventJoin,1000,id,cb);
+        });
+    }
+    
     return {
         eventSave: function(id,data,cb) {
             return post('/youtube/event/'+id,data,cb);
@@ -147,6 +170,7 @@ module.exports = function (server) {
         eventGet: function(id,cb) {
             return get('/youtube/event/'+id,cb);
         },
-        eventStart: eventStart
+        eventStart: eventStart,
+        eventJoin: eventJoin
     }
 }

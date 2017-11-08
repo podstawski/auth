@@ -165,7 +165,7 @@ class youtubeController extends Controller {
             $ret=['yt'=>$id,'chat'=>true,'close'=>$snippet->actualEndTime?true:false];
             
             if ($snippet->actualEndTime) $ret['chat'] = false;
-            elseif ($event['author']==$this->myid) $ret['hangout']=$event['hangout'];
+            elseif ( isset($event['speakers']) && array_search($this->me,$event['speakers'])!==false) $ret['hangout']=$event['hangout'];
             
             return $ret;
                 
@@ -179,6 +179,7 @@ class youtubeController extends Controller {
         
         $eventdata=new eventModel($this->id);
         $event=$eventdata->get();
+        if (!isset($event['event'])) $this->error(6);
         $id=$event['event'];
         if (time()-$event['start']<5) return false;
         
@@ -198,13 +199,35 @@ class youtubeController extends Controller {
         if (!isset($event['event'])) $this->error(6);
         $id=$event['event'];
     
-    
         if (!isset($event['users']) || array_search($this->me,$event['users'])===false) {
             $this->error(7);
-        }   
+        }
         
+        $speaker = isset($event['speakers']) && array_search($this->me,$event['speakers'])!==false;        
+        $event_id=$this->id;
         include(__DIR__.'/../views/chat.phtml');
         die();
+    }
+    
+    public function get_join(){
+        if (!$this->id) $this->error(5);
+        
+        $eventdata=new eventModel($this->id);
+        $event=$eventdata->get();
+        if (!isset($event['event'])) $this->error(6);
+        
+        if (!isset($event['queue'])) $event['queue']=[];
+        if (!isset($event['join'])) $event['join']=[];
+        
+        if (in_array($this->me,$event['join'])) return ['hangout'=>event.hangout];
+        
+        if (in_array($this->me,$event['queue'])) return ['hangout'=>event.hangout];
+        
+        if (in_array($this->me,$event['queue'])) return true;
+        
+        $event['queue'][]=$this->me;
+        $eventdata->save($event);
+        return true;
     }
     
     public function get_my_life_events() {

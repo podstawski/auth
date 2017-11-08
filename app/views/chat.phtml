@@ -8,14 +8,49 @@
             padding:0;
             margin:0;
         }
+        img {
+            width:100%;
+            cursor: pointer;
+            border: 1px solid #000;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        
     </style>
 </head>
 <body>
-    <iframe width="100%" height="50%" src="https://www.youtube.com/live_chat?v=<?php echo $id;?>&embed_domain=auth.webkameleon.com" frameborder="0"></iframe>
+    <iframe width="100%" height="<?php echo $speaker ? '50%' : '80%';?>" src="https://www.youtube.com/live_chat?v=<?php echo $id;?>&embed_domain=auth.webkameleon.com" frameborder="0"></iframe>
+    <?php if ($speaker): ?>
+    
+    <?php else: ?>
+    
+    <img class="join" src="/img/join-<?php echo $lang;?>.png" />
+    <?php endif; ?>
     
 </body>
 <script>
     var chatStart = function() {
+        const $=WebKameleonAuth.jquery;
+        var join=false;
+        
+        $('img.join').fadeIn(1000);
+        $('img.join').click(function(){
+            var img=$(this);
+            if (join) return;
+            join=true;
+            
+            WebKameleonAuth.YoutubeJoinEvent('<?php echo $event_id;?>',function(){
+                img.fadeOut(1000,function(){
+                    img.attr('src','/img/join-<?php echo $lang;?>.png');
+                });
+            });
+            img.fadeOut(1000,function(){
+                img.attr('src','/img/wait-<?php echo $lang;?>.png');
+                img.fadeIn(1000);
+            });
+            
+        });
     }
 </script>
 <script src="/client.js?callback=chatStart"></script>
