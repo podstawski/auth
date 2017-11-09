@@ -31,7 +31,7 @@ class youtubeController extends Controller {
         if (!isset($event['event'])) $this->error(6);
         $id=$event['event'];
         
-        if (!$this->client->getAccessToken()) $this->error(6);
+        if (!$this->client->getAccessToken()) $this->error(12);
         
         $_event=$this->_get_event($id);
         
