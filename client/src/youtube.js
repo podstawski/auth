@@ -58,6 +58,7 @@ module.exports = function (server) {
             var yt_x,yt_y,yt_w,yt_h,ch_x,ch_y,ch_w,ch_h;
             if (w>=640) {
                 yt_w=Math.round((w*2)/3);
+                if (yt_w>940) yt_w=940;
                 yt_x=20;
                 yt_y=20;
                 ch_x=yt_x+yt_w;
@@ -144,6 +145,7 @@ module.exports = function (server) {
                             alternateFun = function(e) {
                                 self.GoogleAuth(restoreText);
                                 alternateFun=null;
+                                return false;
                             }
                             break;
                         
@@ -152,6 +154,7 @@ module.exports = function (server) {
                             alternateFun = function(e) {
                                 restoreText();
                                 alternateFun=null;
+                                return false;
                             }
                             break;
                         
@@ -160,6 +163,7 @@ module.exports = function (server) {
                             alternateFun = function(e) {
                                 restoreText();
                                 alternateFun=null;
+                                return false;
                             }
                             break;
                     }
@@ -167,7 +171,7 @@ module.exports = function (server) {
                 
             });
             
-        
+            return false;
         }
         
         $(button).click(buttonClick);
