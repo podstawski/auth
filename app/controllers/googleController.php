@@ -193,9 +193,19 @@ class googleController extends Controller {
         return true;
     }
 	
-	public function get_lang() {
-		if ($this->id) Error::lang($this->id);
-		return Error::lang();
+	public function post_init() {
+		foreach ($this->data AS $k=>$v) {
+			switch ($k) {
+				case 'lang':
+					Error::lang($v);
+					break;
+				case 'referer':
+					Bootstrap::$main->session('referer',$v);
+					break;
+			}
+		}
+		
+		return true;
 	}
 
 }

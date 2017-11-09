@@ -13,6 +13,18 @@ module.exports = function (server) {
         return true;
     }
     
+    const post = function (url,data,cb) {
+        $.ajax({
+            type: "POST",
+            data: data,
+            url:server+url,
+            xhrFields: {
+                withCredentials: true
+            }
+        }).done(cb);
+        return true;
+    }
+    
     const getUser = function(cb) {
         return get('/google/auth',cb);
     }
@@ -43,11 +55,9 @@ module.exports = function (server) {
             openWindow(server+'/google/scope/'+service+'?redirect='+encodeURI(server+'/close.html'),cb);
             return true;
         },
-        lang: function(lang,cb) {
-            var url='/google/lang';
-            if (typeof(lang)=='string') url+='/'+lang;
-            if (typeof(lang)=='function' && cb==null) cb=lang;
-            return get(url,function(res){
+        init: function(options,cb) {
+            var url='/google/init';
+            return post(url,options,function(res){
                 if (typeof(cb)=='function') cb(res.result);
             });
         }

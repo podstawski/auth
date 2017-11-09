@@ -162,7 +162,6 @@
 		return false;
 	});
 	function WebKameleonAuthReady(u) {
-		WebKameleonAuth.GoogleLang('<?php echo $lang;?>');
 		
 		<?php include(__DIR__.'/event.php');?>
 		
@@ -182,8 +181,8 @@
 					$('#eventSave input[name="'+k+'"]').val(d.data[k]);
 				}
 			} else {
-				if (typeof(data.error)!='undefined') {
-                    alert(data.error.info);
+				if (typeof(d.error)!='undefined') {
+                    console.log(d.error.info);
                 }
 			}
 		

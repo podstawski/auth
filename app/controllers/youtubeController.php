@@ -17,7 +17,8 @@ class youtubeController extends Controller {
         $this->client=new Google_Client();
         $this->client->setAuthConfig(__DIR__.'/../configs/client_credentials.json');
         $this->service = new Google_Service_YouTube($this->client);
-        if (in_array('youtube',$scopes)) $this->client->setAccessToken($user->token());
+        $token=$user->token();
+        if (in_array('youtube',$scopes) && $token) $this->client->setAccessToken($token);
         
     }
     
@@ -29,6 +30,8 @@ class youtubeController extends Controller {
         
         if (!isset($event['event'])) $this->error(6);
         $id=$event['event'];
+        
+        if (!$this->client->getAccessToken()) $this->error(6);
         
         $_event=$this->_get_event($id);
         
