@@ -22,5 +22,14 @@ class eventModel {
         return $data;
     }
     
+    public function queue($data=null) {
+        if ($data!=null) {
+            file_put_contents($this->dir.'/queue.json',json_encode($data));
+            return $data;
+        }
+        if (!file_exists($this->dir.'/queue.json')) return [];
+        return json_decode(file_get_contents($this->dir.'/queue.json'),true);
+    }
+    
 
 }

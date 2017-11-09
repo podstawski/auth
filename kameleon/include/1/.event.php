@@ -80,7 +80,7 @@
 	<input type="hidden" name="_sid" value="<?php echo $sid?>"/>
 	
 	<div>
-		<input type="text" placeholder="youtube id"  name="event" value="<?php echo $costxt?>"/>
+		<input type="text" placeholder="youtube id"  name="event" value=""/>
 		<label for="event">Youtube id:</label>
 	</div>
 	<div>

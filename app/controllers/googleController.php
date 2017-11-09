@@ -51,9 +51,11 @@ class googleController extends Controller {
                         $email=$this->standarize_email($auth['email'],false);
 			
 
-            			//Bootstrap::$main->session('user',$data);
+            			$auth['email']=$email;
                         Bootstrap::$main->session('auth', $auth);
-			
+
+						$user=new userModel($auth['id']);
+						$user->data($auth);
 			
                         $this->redirect(Bootstrap::$main->session('auth_redirect'));
                         

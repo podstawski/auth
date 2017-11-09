@@ -174,18 +174,48 @@ module.exports = function (server) {
         
     }
     
-    const eventJoin = function (id,cb) {
-        get('/youtube/join/'+id,function(d){
-            if (typeof(d.hangout)!='undefined') {
+    const eventBye = function(id,cb) {
+        get('/youtube/unjoin/'+id,function(d){
+            console.log('unjoin',d);
+            if (typeof(d.yt)!='undefined') {
                 
-                post('/youtube/change/'+id,{hangout:d.hangout},function(){
+                post('/youtube/change/'+id,{yt:d.yt},function(){
                 });
                 
                 if (typeof(cb)=='function') cb();
                 return;
             }
             
-            setTimeout(eventJoin,1000,id,cb);
+            setTimeout(eventBye,1000,id,cb);
+        });
+    }
+    
+    const eventJoin = function (id,cbIn,cbOut) {
+        get('/youtube/join/'+id,function(d){
+            if (typeof(d.hangout)!='undefined') {
+                
+                post('/youtube/change/'+id,{hangout:d.hangout},function(){
+                });
+                
+                if (typeof(cbIn)=='function') cbIn();
+                setTimeout(eventBye,1000,id,cbOut);
+                return;
+            }
+            
+            setTimeout(eventJoin,1000,id,cbIn,cbOut);
+        });
+    }
+    
+    var last_guests=JSON.stringify({});
+    
+    const eventGuests = function(id,cb) {
+        get('/youtube/guests/'+id,function(d){
+            if (JSON.stringify(d.guests)!=last_guests ) {
+                last_guests=JSON.stringify(d.guests);
+                cb(d.guests);
+            }
+            
+            setTimeout(eventGuests,1000,id,cb);
         });
     }
     
@@ -197,6 +227,20 @@ module.exports = function (server) {
             return get('/youtube/event/'+id,cb);
         },
         eventStart: eventStart,
-        eventJoin: eventJoin
+        eventJoin: eventJoin,
+        eventGuests: eventGuests,
+        eventGuestIn:function(id,guest,cb) {
+            return post('/youtube/guests/'+id,{
+                user: guest,
+                active: 1
+            },cb);
+        },
+        eventGuestOut:function(id,guest,cb) {
+            return post('/youtube/guests/'+id,{
+                user: guest,
+                active: 0
+            },cb);
+        },
+        
     }
 }

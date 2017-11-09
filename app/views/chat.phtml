@@ -16,13 +16,39 @@
             display: none;
         }
         
+        .guests {
+            height: 50%;
+            overflow: auto;
+            padding: 5px;
+            border-top: 1px red solid;
+        }
+        
+        .guests img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 0;
+            display: inline-block;
+        }
+        
+        .guests li.active {
+            font-weight: bold;
+        }
+        
+        iframe {
+            width: 100%;
+            height: <?php echo $speaker ? '50%' : '80%';?>;
+        }
         
     </style>
 </head>
 <body>
-    <iframe width="100%" height="<?php echo $speaker ? '50%' : '80%';?>" src="https://www.youtube.com/live_chat?v=<?php echo $id;?>&embed_domain=auth.webkameleon.com" frameborder="0"></iframe>
+    <iframe frameborder="0"
+        src="https://www.youtube.com/live_chat?v=<?php echo $id;?>&embed_domain=auth.webkameleon.com"
+    ></iframe>
     <?php if ($speaker): ?>
     
+    <ul class="guests"></ul>
     <?php else: ?>
     
     <img class="join" src="/img/join-<?php echo $lang;?>.png" />
@@ -32,25 +58,63 @@
 <script>
     var chatStart = function() {
         const $=WebKameleonAuth.jquery;
-        var join=false;
+        var mayjoin=true;
         
         $('img.join').fadeIn(1000);
         $('img.join').click(function(){
-            var img=$(this);
-            if (join) return;
-            join=true;
+            var img=this;
+            if (!mayjoin) return;
+            mayjoin=false;
             
-            WebKameleonAuth.YoutubeJoinEvent('<?php echo $event_id;?>',function(){
-                img.fadeOut(1000,function(){
-                    img.attr('src','/img/join-<?php echo $lang;?>.png');
+
+            $(img).fadeOut(500,function(){
+                $(img).attr('src','/img/wait-<?php echo $lang;?>.png');
+                $(img).fadeIn(500,function(){
+                    
+                    WebKameleonAuth.YoutubeJoinEvent('<?php echo $event_id;?>',function(){
+                        $(img).fadeOut(1000,function(){
+                            $(img).attr('src','/img/join-<?php echo $lang;?>.png');
+                        });
+                    },function(){
+                         $(img).fadeIn(1000);
+                    });                
+                
                 });
-            });
-            img.fadeOut(1000,function(){
-                img.attr('src','/img/wait-<?php echo $lang;?>.png');
-                img.fadeIn(1000);
             });
             
         });
+        
+        <?php if ($speaker): ?>
+            WebKameleonAuth.YoutubeEventGuests('<?php echo $event_id;?>',function(d){
+            
+                var html='';
+                if (typeof(d.active)!='undefined') {
+                    for (var k in d.active) {
+                        html+='<li class="active">';
+                        html+='<input type="checkbox" value="'+k+'" checked/> ';
+                        if (typeof(d.active[k].picture)!='undefined') html+='<img align="absMiddle" src="'+d.active[k].picture+'"/>';
+                        html+=d.active[k].name;
+                        html+='</li>';
+                    }
+                }
+                if (typeof(d.waiting)!='undefined') {
+                    for (var k in d.waiting) {
+                        html+='<li class="waiting">';
+                        html+='<input type="checkbox" value="'+k+'"/> ';
+                        if (typeof(d.waiting[k].picture)!='undefined') html+='<img align="absMiddle" src="'+d.waiting[k].picture+'"/>';
+                        html+=d.waiting[k].name;
+                        html+='</li>';
+                    }
+                }
+                $('.guests').html(html);
+            });
+            $(document).on('click','.guests input',function(e){
+            
+                if ($(this).prop('checked')) WebKameleonAuth.YoutubeEventGuestIn('<?php echo $event_id;?>',$(this).val());
+                else WebKameleonAuth.YoutubeEventGuestOut('<?php echo $event_id;?>',$(this).val());
+            });
+            
+        <?php endif; ?>
     }
 </script>
 <script src="/client.js?callback=chatStart"></script>

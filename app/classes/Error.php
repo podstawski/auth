@@ -12,7 +12,8 @@ class Error {
         7  => ['en'=>'Please pay','pl'=>'Prosimy zapłacić'],
         8  => ['en'=>'Broadcast starts','pl'=>'Transmisja zaczyna się'],
         9  => ['en'=>'Please log in','pl'=>'Proszę się zalogować'],
-        
+        10 => ['en'=>'Not authorized','pl'=>'Nie masz dostępu'],
+        11 => ['en'=>'No such user','pl'=>'Nie ma użytkownika'],
     );
 
     

@@ -82,12 +82,25 @@ class youtubeController extends Controller {
         $eventdata=new eventModel($this->id);
         $event=$eventdata->get();
         if (!isset($this->data['event'])) $this->error(6);
+        
+        $this->data['event']=end(explode('/',$this->data['event']));
+        $pos=strpos($this->data['event'],'v=');
+        if ($pos) $this->data['event']=substr($this->data['event'],$pos+2);
+        $pos=strpos($this->data['event'],'&');
+        if ($pos) $this->data['event']=substr($this->data['event'],0,$pos);
+        
         $id=$this->data['event'];
         
         $_event=$this->_get_event($id);
         if (!isset($_event->items) || count($_event->items)==0) $this->error(6);
         
         
+        
+        if (isset($this->data['hangout'])) {
+            $pos=strpos($this->data['hangout'],'?');
+            if ($pos) $this->data['hangout']=substr($this->data['hangout'],0,$pos);
+            $this->data['hangout']=end(explode('/',$this->data['hangout']));
+        }
         
         if (isset($this->data['users'])) {
             $users=strtolower($this->data['users']);
@@ -131,6 +144,7 @@ class youtubeController extends Controller {
                 'id' => $id
             )
         );
+        
         if ($author!=null && $token) {
             $this->client->setAccessToken($token);
         }
@@ -216,17 +230,39 @@ class youtubeController extends Controller {
         $event=$eventdata->get();
         if (!isset($event['event'])) $this->error(6);
         
-        if (!isset($event['queue'])) $event['queue']=[];
-        if (!isset($event['join'])) $event['join']=[];
+        $queue=$eventdata->queue();
         
-        if (in_array($this->me,$event['join'])) return ['hangout'=>$event['hangout']];
-        if (in_array($this->me,$event['queue'])) return ['hangout'=>$event['hangout']];
-        if (in_array($this->me,$event['queue'])) return true;
         
-        $event['queue'][]=$this->me;
-        $eventdata->save($event);
+        if (!isset($queue['active'])) $queue['active']=[];
+        if (!isset($queue['waiting'])) $queue['waiting']=[];
+        if (!isset($queue['out'])) $queue['out']=[];
+        
+        if (isset($queue['active'][$this->myid])) return ['hangout'=>$event['hangout']];
+        if (isset($queue['waiting'][$this->myid])) return true;
+        
+        $queue['waiting'][$this->myid]=Bootstrap::$main->session('auth');
+        $eventdata->queue($queue);
         return true;
     }
+    
+    public function get_unjoin(){
+        if (!$this->id) $this->error(5);
+        
+        $eventdata=new eventModel($this->id);
+        $event=$eventdata->get();
+        if (!isset($event['event'])) $this->error(6);
+        
+        $queue=$eventdata->queue();
+        
+        if (isset($queue['out'][$this->myid])) {
+            unset($queue['out'][$this->myid]);
+            $eventdata->queue($queue);
+            return ['yt'=>$event['event']];
+        }
+        
+        return true;
+    }
+    
     
     public function get_change() {
         if (!$this->id) $this->error(5);
@@ -238,6 +274,45 @@ class youtubeController extends Controller {
         if (!$this->id) $this->error(5);
         
         return Bootstrap::$main->session('yt.'.$this->id,$this->data);
+    }
+    
+    public function get_guests() {
+        if (!$this->id) $this->error(5);
+        $eventdata=new eventModel($this->id);
+        $event=$eventdata->get();
+        if (!isset($event['event'])) $this->error(6);
+        
+        if (!isset($event['speakers']) || array_search($this->me,$event['speakers'])===false) {
+            $this->error(10);
+        }
+        
+        return ['guests'=>$eventdata->queue()];
+        
+    }
+    
+    public function post_guests(){
+        if (!$this->id) $this->error(5);
+        $eventdata=new eventModel($this->id);
+        $event=$eventdata->get();
+        if (!isset($event['event'])) $this->error(6);
+        
+        if (!isset($event['speakers']) || array_search($this->me,$event['speakers'])===false) {
+            $this->error(10);
+        }
+        if (!isset($this->data['user'])) $this->error(11);
+        $user=$this->data['user'];
+        
+        $queue=$eventdata->queue();
+        if ($this->data['active'] && isset($queue['waiting'][$user])) {
+            $queue['active'][$user] = $queue['waiting'][$user];
+            unset($queue['waiting'][$user]);
+        } 
+        if (!$this->data['active'] && isset($queue['active'][$user])) {
+            
+            $queue['out'][$user] = $queue['active'][$user];
+            unset($queue['active'][$user]);
+        }
+        return $eventdata->queue($queue);
     }
     
     public function get_my_life_events() {

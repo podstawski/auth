@@ -25,5 +25,10 @@ class userModel {
     public function token() {
         return json_decode(file_get_contents($this->dir.'/token.json'),true);
     }
+    
+    public function data($d=null) {
+        if ($d!=null) file_put_contents($this->dir.'/data.json',json_encode($d));
+        return json_decode(file_get_contents($this->dir.'/data.json'),true);
+    }
 
 }

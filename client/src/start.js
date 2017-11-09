@@ -37,6 +37,9 @@ let WebKameleonAuthObj = function(w,d) {
         YoutubeGetEvent: youtube.eventGet,
         YoutubeStartEvent: youtube.eventStart,
         YoutubeJoinEvent: youtube.eventJoin,
+        YoutubeEventGuests: youtube.eventGuests,
+        YoutubeEventGuestIn: youtube.eventGuestIn,
+        YoutubeEventGuestOut: youtube.eventGuestOut,
         
         jquery: jquery
     }
