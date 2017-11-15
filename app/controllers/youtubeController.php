@@ -36,7 +36,7 @@ class youtubeController extends Controller {
         $_event=$this->_get_event($id);
         
         if (!isset($_event->items) || count($_event->items)==0) $this->error(6);
-          
+        
         return ['yt'=>$_event->items[0],'data'=>$event];
     }
     
@@ -123,6 +123,8 @@ class youtubeController extends Controller {
             else $this->data['speakers']=array_unique(explode("\n",$speakers));
         }
         
+        $this->data['title']=$_event->items[0]->snippet->title;
+        
         $this->data['author']=$this->myid;
         $data=$eventdata->save($this->data);
         //$this->enableEmedded($id);
@@ -163,7 +165,8 @@ class youtubeController extends Controller {
         if (!isset($event['event'])) $this->error(6);
         $id=$event['event'];
     
-        $snippet=$this->_get_event($id,$event['author']!=$this->myid?$event['author']:null)->items[0]->snippet;
+        $imtheauthor=$event['author']==$this->myid;
+        $snippet=$this->_get_event($id,$imtheauthor?null:$event['author'])->items[0]->snippet;
         
     
         if (!isset($event['users']) || array_search($this->me,$event['users'])===false) {
@@ -172,14 +175,29 @@ class youtubeController extends Controller {
         
         
         
-        if ($snippet->actualStartTime) {
+        if ($snippet->actualStartTime || $imtheauthor) {
             
-            $this->setVideoStatus($id,$event['author'],'unlisted');
+            $may_watch=true;
+            
+            if ($event['referers']) {
+                $may_watch=false;
+                
+                if (isset($_SERVER['HTTP_REFERER'])) foreach (explode(',',strtolower($event['referers'])) AS $referer) {
+                    if (strstr(strtolower($_SERVER['HTTP_REFERER']),$referer)) $may_watch=true;
+                }
+            }
+         
+            if($may_watch) $this->setVideoStatus($id,$event['author'],'unlisted');
             
             $event['start']=time();
             $eventdata->save($event);
             
             $ret=['yt'=>$id,'chat'=>true,'close'=>$snippet->actualEndTime?true:false];
+            
+            if ($imtheauthor) {
+                $ret['hangout']=$event['hangout'];
+                return $ret;
+            }
             
             if ($snippet->actualEndTime) $ret['chat'] = false;
             elseif ( isset($event['speakers']) && array_search($this->me,$event['speakers'])!==false) $ret['hangout']=$event['hangout'];

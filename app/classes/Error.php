@@ -14,7 +14,8 @@ class Error {
         9  => ['en'=>'Please log in','pl'=>'Proszę się zalogować'],
         10 => ['en'=>'Not authorized','pl'=>'Nie masz dostępu'],
         11 => ['en'=>'No such user','pl'=>'Nie ma użytkownika'],
-        11 => ['en'=>'Access not granted','pl'=>'Nie udzielono dostępu'],
+        12 => ['en'=>'Access not granted','pl'=>'Nie udzielono dostępu'],
+        13 => ['en'=>'Price problem','pl'=>'Brak ceny'],
     );
 
     

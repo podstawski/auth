@@ -104,9 +104,16 @@
 		<label for="price_offline">Cena za dostęp ex post:</label>
 	</div>
 	<div>
-		<input type="text" placeholder="Klasa przycisku/linku" title="klasa przycisku" name="button" value=""/>
+		<input type="text" placeholder="Klasa przycisku/linku" name="button" value=""/>
 		<label for="button">Klasa przycisku/linku:</label>
-		
+	</div>
+	<div>
+		<input type="text" placeholder="Domeny odnośników"  name="referers" value="<?php echo str_replace('/','',preg_replace('~^http[s]*://~','',$session['server']['http_url']));?>"/>
+		<label for="referers">Domeny odnośników:</label>
+	</div>
+	<div>
+		<input type="text" placeholder="Identyfikator DOTPAY"  name="dotpay" value=""/>
+		<label for="dotpay">Identyfikator Dotpay:</label>
 	</div>
 	<a class="btn token">Token</a>
 	<a class="btn save">Zapisz</a>
@@ -162,6 +169,11 @@
 		return false;
 	});
 	function WebKameleonAuthReady(u) {
+		var ref=$('#eventSave input[name="referers"]');
+		var rv=ref.val();
+		if (rv.length>0) rv+=',';
+		rv+=location.host;
+		ref.val(rv);
 		
 		<?php include(__DIR__.'/event.php');?>
 		

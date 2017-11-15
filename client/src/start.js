@@ -1,5 +1,6 @@
 const google_auth_obj = require('./google.auth.js'),
     youtube_obj = require('./youtube.js'),
+    dotpay_obj = require('./dotpay.js'),
     jquery=require('jquery');
 
 let WebKameleonAuthObj = function(w,d) {
@@ -22,7 +23,8 @@ let WebKameleonAuthObj = function(w,d) {
         }
     }
     const google_auth = google_auth_obj(server),
-            youtube = youtube_obj(server);
+            youtube = youtube_obj(server),
+            dotpay = dotpay_obj(server);
     
     
     
@@ -40,6 +42,8 @@ let WebKameleonAuthObj = function(w,d) {
         YoutubeEventGuests: youtube.eventGuests,
         YoutubeEventGuestIn: youtube.eventGuestIn,
         YoutubeEventGuestOut: youtube.eventGuestOut,
+        
+        DotpayPayment: dotpay.payment,
         
         jquery: jquery
     }

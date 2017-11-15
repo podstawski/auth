@@ -1,30 +1,11 @@
 const $=require('jquery'),
-      moment = require('moment');
+      moment = require('moment'),
+      _ajax = require('./ajax');
 
 
 module.exports = function (server) {
     
-    const get =function(url,cb) {
-        $.ajax({
-            url:server+url,
-            xhrFields: {
-                withCredentials: true
-            }
-        }).done(cb);
-        return true;
-    }
-    
-    const post = function (url,data,cb) {
-        $.ajax({
-            type: "POST",
-            data: data,
-            url:server+url,
-            xhrFields: {
-                withCredentials: true
-            }
-        }).done(cb);
-        return true;
-    }
+    const ajax=new _ajax(server);
     
     const openWindow = function(url,name,x,y,w,h,cb) {
         var win=window.open(url,name,'left='+x+',top='+y+',width='+w+',height='+h+',scrollbars=no,menubar=no,status=no,titlebar=no,toolbar=no,location=no');
@@ -78,10 +59,11 @@ module.exports = function (server) {
             var win_yt=openWindow('','webkameleon_auth_yt',yt_x,yt_y,yt_w,yt_h,function(){
                 if (win_ch!=null) win_ch.close();
                 stopLoop=true;
+                ajax.get('/youtube/stop/'+evid);
             });
             
             
-            get('/youtube/start/'+evid,function(d){
+            ajax.get('/youtube/start/'+evid,function(d){
                 
                 if (typeof(d.yt)!='undefined') {
                     var yt_url=getYTurl(d.yt);
@@ -100,15 +82,15 @@ module.exports = function (server) {
                     
                         const changeLoop=function() {
                             if (stopLoop) return;
-                            get('/youtube/change/'+evid,function(d){
+                            ajax.get('/youtube/change/'+evid,function(d){
                                 if (typeof(d.hangout)!='undefined' && d.hangout.length>0) {
                                     win_yt.location.href=getHOurl(d.hangout);
-                                    post('/youtube/change/'+evid,{hangout:''},function(){
+                                    ajax.post('/youtube/change/'+evid,{hangout:''},function(){
                                         setTimeout(changeLoop,1000);
                                     });
                                 } else if (typeof(d.yt)!='undefined' && d.yt.length>0) {
                                     win_yt.location.href=getYTurl(d.yt);
-                                    post('/youtube/change/'+evid,{yt:''},function(){
+                                    ajax.post('/youtube/change/'+evid,{yt:''},function(){
                                         setTimeout(changeLoop,1000);
                                     });
                                 } else {
@@ -127,7 +109,7 @@ module.exports = function (server) {
                     }
                     
                     setTimeout(function(){
-                        get('/youtube/stop/'+evid,function(){
+                        ajax.get('/youtube/stop/'+evid,function(){
                         });
                     },6000);
                 }
@@ -152,8 +134,10 @@ module.exports = function (server) {
                         case 7:
                             b.text(d.error.info+' '+d.ctx);
                             alternateFun = function(e) {
-                                restoreText();
-                                alternateFun=null;
+                                self.DotpayPayment(d.ctx,evid, function(){
+                                    restoreText();
+                                    alternateFun=null;
+                                });
                                 return false;
                             }
                             break;
@@ -179,11 +163,11 @@ module.exports = function (server) {
     }
     
     const eventBye = function(id,cb) {
-        get('/youtube/unjoin/'+id,function(d){
+        ajax.get('/youtube/unjoin/'+id,function(d){
             console.log('unjoin',d);
             if (typeof(d.yt)!='undefined') {
                 
-                post('/youtube/change/'+id,{yt:d.yt},function(){
+                ajax.post('/youtube/change/'+id,{yt:d.yt},function(){
                 });
                 
                 if (typeof(cb)=='function') cb();
@@ -195,10 +179,10 @@ module.exports = function (server) {
     }
     
     const eventJoin = function (id,cbIn,cbOut) {
-        get('/youtube/join/'+id,function(d){
+        ajax.get('/youtube/join/'+id,function(d){
             if (typeof(d.hangout)!='undefined') {
                 
-                post('/youtube/change/'+id,{hangout:d.hangout},function(){
+                ajax.post('/youtube/change/'+id,{hangout:d.hangout},function(){
                 });
                 
                 if (typeof(cbIn)=='function') cbIn();
@@ -213,7 +197,7 @@ module.exports = function (server) {
     var last_guests=JSON.stringify({});
     
     const eventGuests = function(id,cb) {
-        get('/youtube/guests/'+id,function(d){
+        ajax.get('/youtube/guests/'+id,function(d){
             if (JSON.stringify(d.guests)!=last_guests ) {
                 last_guests=JSON.stringify(d.guests);
                 cb(d.guests);
@@ -225,22 +209,22 @@ module.exports = function (server) {
     
     return {
         eventSave: function(id,data,cb) {
-            return post('/youtube/event/'+id,data,cb);
+            return ajax.post('/youtube/event/'+id,data,cb);
         },
         eventGet: function(id,cb) {
-            return get('/youtube/event/'+id,cb);
+            return ajax.get('/youtube/event/'+id,cb);
         },
         eventStart: eventStart,
         eventJoin: eventJoin,
         eventGuests: eventGuests,
         eventGuestIn:function(id,guest,cb) {
-            return post('/youtube/guests/'+id,{
+            return ajax.post('/youtube/guests/'+id,{
                 user: guest,
                 active: 1
             },cb);
         },
         eventGuestOut:function(id,guest,cb) {
-            return post('/youtube/guests/'+id,{
+            return ajax.post('/youtube/guests/'+id,{
                 user: guest,
                 active: 0
             },cb);
