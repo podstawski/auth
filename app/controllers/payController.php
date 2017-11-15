@@ -39,11 +39,13 @@ class payController extends Controller {
             $data['channel_country'].
             $data['geoip_country'];
             
-            //echo hash('sha256', $sign)."\n$pin\n";
             return hash('sha256', $sign);
     }
     
     public function post_dotpay() {
+        
+        Bootstrap::$main->log('payment',[$this->id,$this->data]);
+        
         $config=Bootstrap::$main->getConfig('dotpay');
         
         $eventdata=new eventModel($this->id);
@@ -53,7 +55,9 @@ class payController extends Controller {
         
         if (isset($config[$id]) && isset($config[$id]['pin'])) {            
             if (isset($this->data['signature']) && $this->data['signature']==@$this->signature($config[$id]['pin'],$id,$this->data)) {
-                $this->grant($this->data['control'],$this->id);
+                $this->grant(base64_decode($this->data['control']),$this->id);
+            } else {
+                Bootstrap::$main->log('payment',[$this->id,'Signature',@$this->signature($config[$id]['pin'],$id,$this->data)]);
             }
         }
         
@@ -91,7 +95,7 @@ class payController extends Controller {
             'url' => 'http://'.$_SERVER['HTTP_HOST'].'/close.html',
             'urlc' => 'http://'.$_SERVER['HTTP_HOST'].'/pay/dotpay/'.$this->id,
             'description' => $event['title'],
-            'control' => $auth['id'],
+            'control' => base64_encode($auth['id']),
         ];
         
         return $form;
@@ -107,8 +111,8 @@ class payController extends Controller {
         $user=$userdata->data();
         
         
-        
         if (array_search($user['email'],$event['users'])===false) {
+            Bootstrap::$main->log('payment',['grant',$user['email'],$event_id,$event['event']]);
             $event['users'][]=$user['email'];
             $eventdata->save($event);
         }
