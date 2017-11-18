@@ -1,6 +1,10 @@
 const $=require('jquery'),
       moment = require('moment'),
-      _ajax = require('./ajax');
+      _ajax = require('./ajax'),
+      datatables = require('datatables.net'),
+      dtlang = require('./dt-lang.js');
+      
+require('datatables.net-dt/css/jquery.dataTables.css');
 
 
 module.exports = function (server) {
@@ -207,6 +211,45 @@ module.exports = function (server) {
         });
     }
     
+    const displayEvents = function(events,tableSelector) {
+        
+        if (!$(tableSelector).hasClass('dataTable')) {
+        
+            $(tableSelector).DataTable({
+                language: {
+                    url: dtlang('en')
+                },
+                columns: [{
+                    title: 'Name',
+                    data: 'title'
+                },{
+                    title: 'Opt',
+                    sortable: false,
+                    render: function ( data, type, full, meta ) {
+                        return '';
+                    }
+                }],
+                order: []
+            });
+        }
+                
+        var datatable = $(tableSelector).dataTable().api();
+        var data=[];
+        
+        for (var k in events) {
+            events[k].DT_RowId=k;
+            data.push(events[k]);
+        }
+        
+        
+        
+        datatable.clear();
+        datatable.rows.add(data);
+        datatable.draw();
+        
+        return data;
+    }
+    
     return {
         eventSave: function(id,data,cb) {
             return ajax.post('/youtube/event/'+id,data,cb);
@@ -229,6 +272,7 @@ module.exports = function (server) {
                 active: 0
             },cb);
         },
+        displayEvents:displayEvents
         
     }
 }

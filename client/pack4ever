@@ -7,4 +7,5 @@ do
 		touch last-pack
 		npm run pack-js
 	fi
+	sleep 1
 done

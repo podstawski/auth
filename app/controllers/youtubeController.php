@@ -129,8 +129,10 @@ class youtubeController extends Controller {
         $data=$eventdata->save($this->data);
         //$this->enableEmedded($id);
         
+        $user=new userModel($this->myid);
+        $events=$user->events([$this->id => ['title'=>$this->data['title']]]);
         
-        return ['yt'=>$_event->items[0],'data'=>$data];
+        return ['yt'=>$_event->items[0],'data'=>$data,'events'=>$events];
         
     }
     
@@ -336,6 +338,55 @@ class youtubeController extends Controller {
         return $eventdata->queue($queue);
     }
     
+    public function get_events() {
+		$user=new userModel($this->myid);
+		return ['events'=>$user->events()];
+	}
+    
+    public function post_events() {
+		
+        $event_id=$this->myid.'-'.time();
+        
+        $broadcastsResponse = $this->service->liveBroadcasts->listLiveBroadcasts(
+            'id,snippet',
+            array(
+                'broadcastStatus' => 'upcoming'
+            )
+        );
+        
+        $last=false;
+        
+        foreach($broadcastsResponse->items AS $item) {
+            if (!$last || strtotime($item->snippet->publishedAt) > strtotime($last))
+                $last=$item->snippet->publishedAt;
+        }
+        
+		return ['event'=>$event_id,'last'=>$last];
+	}
+    
+    
+    public function get_my_future_event() {
+        $broadcastsResponse = $this->service->liveBroadcasts->listLiveBroadcasts(
+            'id,snippet',
+            array(
+                'broadcastStatus' => 'upcoming'
+            )
+        );
+        
+        if (count($broadcastsResponse->items)==0) return ['event'=>false];
+        
+        if (!$this->id) return ['event'=>$broadcastsResponse->items[0]];
+        
+        $last=strtotime($this->id);
+        
+        foreach($broadcastsResponse->items AS $item) {
+            if (strtotime($item->snippet->publishedAt) > $last)
+                return ['event'=>$item];
+        }
+        
+        return ['event'=>false];
+    }
+    
     public function get_my_life_events() {
         
         /*
@@ -348,7 +399,7 @@ class youtubeController extends Controller {
         $broadcastsResponse = $this->service->liveBroadcasts->listLiveBroadcasts(
             'id,snippet',
             array(
-                'id' => '7vD30NXPqck'
+                'mine' => 'true'
             )
         );
         

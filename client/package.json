@@ -18,6 +18,8 @@
     "webpack": "^3.8.1"
   },
   "dependencies": {
+    "datatables.net": "^1.10.16",
+    "datatables.net-dt": "^1.10.16",
     "jquery": "^3.2.1",
     "moment": "^2.19.1"
   }

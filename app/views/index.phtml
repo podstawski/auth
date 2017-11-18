@@ -1,0 +1,144 @@
+<html lang="<?php echo $lang;?>">
+<head>
+    <meta charset="utf-8">
+    <title>ONLINE EDUCATION</title>
+    
+    <style>
+        body: {
+            padding:0;
+            margin:0;
+        }
+        
+        a.plus {
+            display: inline-block;
+            color: #f3b900;
+            background-color: #0a0;
+            padding: 0.6em 0.9em;
+            font-size: 3em;
+            font-weight: bold;
+            border-radius: 50%;
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            cursor: pointer;
+            transition: all 0.5s;
+        }
+        a.plus:hover {
+            background-color: #0f0;
+            color: #fff;
+        }
+        
+        a.plusplus {
+            position: absolute;
+            right: 40%;
+            bottom: 45%;
+            padding: 0.6em 0.9em;
+            font-size: 5em;
+        }
+        
+        .dataTables_wrapper {
+            margin-bottom: 100px;
+        }
+        
+    </style>
+</head>
+<body>
+    
+<a class="plus">&#43;</a>
+<table class="events"></table>
+</body>
+<script>
+    var $;
+    var newEventWindow=null;
+    var showEvents=function(events) {
+        var e=WebKameleonAuth.YoutubeDisplayEvents(events,'table.events');
+
+        setTimeout(function(){
+            if (e.length==0) $('table.events').closest('.dataTables_wrapper').hide();
+            else $('table.events').closest('.dataTables_wrapper').show();
+        },1);        
+        
+    }
+    
+    var eduStart = function() {
+        $=WebKameleonAuth.jquery;
+        
+        WebKameleonAuth.GoogleUser(function(u){
+
+            if (typeof(u.id)=='undefined') {
+                location.href='/google?redirect='+encodeURIComponent('http://'+location.host);
+                return;
+            }
+            
+            $.get('/google/scopes',function(s){
+                var scopes=s.scopes;
+                if (scopes==null || scopes.indexOf('youtube')==-1) {
+                    location.href='/google/scope/youtube?redirect='+encodeURIComponent('http://'+location.host);
+                    return;
+                }
+                
+                $.get('/youtube/events',function(e){
+                    showEvents(e.events);
+                    console.log(e.events);
+                    if (e.events.length==0) {
+                        $('a.plus').addClass('plusplus');
+                        
+                    }
+                    
+                });
+
+            });
+            
+        });
+        
+        $('a.plus').click(function(){
+            
+            if (newEventWindow!=null) {
+                newEventWindow.focus();
+                return;
+            }
+            $(this).removeClass('plusplus');
+            var w=screen.width;
+            if (w>1000) w=1000;
+            var h=screen.height-40;
+            
+            newEventWindow=window.open('https://www.youtube.com/my_live_events?action_create_live_event=1','new_event',',width='+w+',height='+h+',scrollbars=yes,menubar=no,status=no,titlebar=no,toolbar=no,location=no');
+            var to=function() {
+                if (newEventWindow==null) return;
+                if (newEventWindow.window!=null) {
+                    setTimeout(to,500);
+                    return;
+                }
+                newEventWindow=null;
+            }
+            to();
+            $.post('/youtube/events',function(e){
+                var watch = function() {
+                    if (newEventWindow==null) return;
+                    var url='/youtube/my_future_event';
+                    if (e.last) url+='/'+e.last;
+                    $.get(url,function(fe){
+                        if (!fe.event) {
+                            setTimeout(watch,1000);
+                            return;
+                        }
+                        newEventWindow.close();
+                        newEventWindow=null;
+                        
+                        $.post('/youtube/event/'+e.event,{
+                            event:fe.event.id
+                        },function(ev){
+                            showEvents(ev.events);
+                        });
+                        
+                    });
+                }
+                watch();
+                
+            });
+        });
+        
+    }
+</script>
+<script src="/client.js?callback=eduStart"></script>
+</html>

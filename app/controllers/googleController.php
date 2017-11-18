@@ -138,9 +138,11 @@ class googleController extends Controller {
         $auth=$this->require_user();
  
         $user=new userModel($auth['id']);
-        return $user->scopes();
+        return ['scopes'=>$user->scopes()];
     }
     
+
+	
     public function get_scope() {
         $auth=$this->require_user();
 		

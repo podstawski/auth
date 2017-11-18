@@ -19,6 +19,19 @@ class userModel {
         return json_decode(file_get_contents($this->dir.'/scopes.json'),true);
     }
     
+    public function events($event=null) {
+        $ret=[];
+        if (file_exists($this->dir.'/events.json'))
+            $ret=json_decode(file_get_contents($this->dir.'/events.json'),true);
+            
+        if ($event!=null) {
+            $ret=array_merge($ret,$event);
+            file_put_contents($this->dir.'/events.json',json_encode($ret));
+        }
+        
+        return $ret;
+    }
+    
     public function storeToken($token,$scope) {
         $scopes=array_unique(array_merge($this->scopes(),explode(',',$scope)));
         file_put_contents($this->dir.'/scopes.json',json_encode($scopes));
