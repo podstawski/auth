@@ -32,9 +32,21 @@ module.exports = function (server) {
         return 'https://hangouts.google.com/hangouts/_/ytl/'+id;
     }
     
-    const eventStart = function(button,evid) {
+    const eventStart = function(button,evid,buttonInsertAfter,buttonInsertText) {
         var self=this;
         var alternateFun=null;
+        
+        
+        if (buttonInsertAfter!=null) {
+            var id='but'+buttonInsertAfter.replace('#','');
+            var a='<a id="'+id+'" class="'+button+'" href="#">'+buttonInsertText+'</a>';
+            $(buttonInsertAfter).parent().append(a);
+            button='#'+id;
+        }
+        
+        var win_ch=null;
+        var win_yt=null;
+
         var buttonClick=function(e) {
             if (typeof(alternateFun)=='function') return alternateFun(e);
             
@@ -59,106 +71,130 @@ module.exports = function (server) {
             
             var stopLoop=false;
             yt_h=ch_h=Math.round((yt_w*9)/16)+120;
-            var win_ch=null;
-            var win_yt=openWindow('','webkameleon_auth_yt',yt_x,yt_y,yt_w,yt_h,function(){
-                if (win_ch!=null) win_ch.close();
-                stopLoop=true;
-                ajax.get('/youtube/stop/'+evid);
-            });
             
+            if (win_yt==null) {   
+                win_yt=openWindow('','webkameleon_auth_yt',yt_x,yt_y,yt_w,yt_h,function(){
+                    if (win_ch!=null) win_ch.close();
+                    win_yt=null;
+                    stopLoop=true;
+                    ajax.get('/youtube/stop/'+evid);
+                });
+            } else {
+                win_yt.focus();
+            }
             
-            ajax.get('/youtube/start/'+evid,function(d){
-                
-                if (typeof(d.yt)!='undefined') {
-                    var yt_url=getYTurl(d.yt);
-                    if (typeof(d.hangout)!='undefined')
-                        yt_url=getHOurl(d.hangout);
-                    if (d.chat && ch_x>0) {
-                        var fname='top_'+Math.random();
-                        fname=fname.replace('\.','_');
-                        window[fname] = function () {
-                            win_ch=openWindow('','webkameleon_auth_ch',ch_x,ch_y,ch_w,ch_h);
-                            
-                            win_yt.location.href=yt_url;
-                            win_ch.location.href=server+'/youtube/chat/'+evid;
-                        }
-                        win_yt.document.write('<div align="center"><img id="yt" onclick="top.opener.'+fname+'()" src="http://auth.webkameleon.com/img/yt.jpg" width="99%" style="cursor:pointer"/></div>')
+            var tryStart = function(successFun,errorFun) {
+                ajax.get('/youtube/start/'+evid,function(d){
+                    if (typeof(d.yt)!='undefined') {
+                        if (successFun!=null) successFun(d);
+                    }                        
+                    if (typeof(d.error)!='undefined') {
+                        if (errorFun!=null) errorFun(d);
+                        
+                    }
                     
-                        const changeLoop=function() {
-                            if (stopLoop) return;
-                            ajax.get('/youtube/change/'+evid,function(d){
-                                if (typeof(d.hangout)!='undefined' && d.hangout.length>0) {
-                                    win_yt.location.href=getHOurl(d.hangout);
-                                    ajax.post('/youtube/change/'+evid,{hangout:''},function(){
-                                        setTimeout(changeLoop,1000);
-                                    });
-                                } else if (typeof(d.yt)!='undefined' && d.yt.length>0) {
-                                    win_yt.location.href=getYTurl(d.yt);
-                                    ajax.post('/youtube/change/'+evid,{yt:''},function(){
-                                        setTimeout(changeLoop,1000);
-                                    });
-                                } else {
-                                    setTimeout(changeLoop,1000);
-                                }
-                                
-                                
-                            });
-                        }
-                        changeLoop();
-                    
-                    } else {
+                });                
+            }
+            
+            var startSuccess = function(d) {
+                var yt_url=getYTurl(d.yt);
+                if (typeof(d.hangout)!='undefined')
+                    yt_url=getHOurl(d.hangout);
+                if (d.chat && ch_x>0) {
+                    var fname='top_'+Math.random();
+                    fname=fname.replace('\.','_');
+                    window[fname] = function () {
+                        win_ch=openWindow('','webkameleon_auth_ch',ch_x,ch_y,ch_w,ch_h);
+                        
                         win_yt.location.href=yt_url;
-                        
-                        
+                        win_ch.location.href=server+'/youtube/chat/'+evid;
                     }
-                    
-                    setTimeout(function(){
-                        ajax.get('/youtube/stop/'+evid,function(){
-                        });
-                    },6000);
-                }
-
-                if (typeof(d.error)!='undefined') {
-                    win_yt.close();
-                    var oldText=b.text();
-                    var restoreText=function(){
-                        b.text(oldText);
-                    }
-                    
-                    switch(d.error.number) {
-                        case 9:
-                            b.text(d.error.info);
-                            alternateFun = function(e) {
-                                self.GoogleAuth(restoreText);
-                                alternateFun=null;
-                                return false;
-                            }
-                            break;
-                        
-                        case 7:
-                            b.text(d.error.info+' '+d.ctx);
-                            alternateFun = function(e) {
-                                self.DotpayPayment(d.ctx,evid, function(){
-                                    restoreText();
-                                    alternateFun=null;
+                    win_yt.document.write('<div align="center"><img id="yt" onclick="top.opener.'+fname+'()" src="http://auth.webkameleon.com/img/yt.jpg" width="99%" style="cursor:pointer"/></div>')
+                
+                    const changeLoop=function() {
+                        if (stopLoop) return;
+                        ajax.get('/youtube/change/'+evid,function(d){
+                            if (typeof(d.hangout)!='undefined' && d.hangout.length>0) {
+                                win_yt.location.href=getHOurl(d.hangout);
+                                ajax.post('/youtube/change/'+evid,{hangout:''},function(){
+                                    setTimeout(changeLoop,1000);
                                 });
-                                return false;
+                            } else if (typeof(d.yt)!='undefined' && d.yt.length>0) {
+                                win_yt.location.href=getYTurl(d.yt);
+                                ajax.post('/youtube/change/'+evid,{yt:''},function(){
+                                    setTimeout(changeLoop,1000);
+                                });
+                            } else {
+                                setTimeout(changeLoop,1000);
                             }
-                            break;
-                        
-                        case 8:
-                            b.text(d.error.info+' '+moment(d.ctx).format('DD-MM-YYYY HH:mm'));
-                            alternateFun = function(e) {
+                            
+                            
+                        });
+                    }
+                    changeLoop();
+                
+                } else {
+                    win_yt.location.href=yt_url;
+                    
+                    
+                }
+                
+                setTimeout(function(){
+                    ajax.get('/youtube/stop/'+evid,function(){
+                    });
+                },6000);
+                
+            }
+            
+            var startError = function(d) {
+                var oldText=b.text();
+                var restoreText=function(){
+                    b.text(oldText);
+                }
+                
+                if(win_yt!=null) win_yt.close();
+                
+                switch(d.error.number) {
+                    case 9:
+                        b.text(d.error.info);
+                        alternateFun = function(e) {
+                            self.GoogleAuth(function(){
                                 restoreText();
                                 alternateFun=null;
-                                return false;
-                            }
-                            break;
-                    }
+                                
+                                tryStart(null,startError);
+                            });
+                            
+                            return false;
+                        }
+                        break;
+                    
+                    case 7:
+                        b.text(d.error.info+' '+d.ctx);
+                        alternateFun = function(e) {
+                            self.DotpayPayment(d.ctx,evid, function(){
+                                restoreText();
+                                alternateFun=null;
+                                tryStart(null,startError);
+                            });
+                            return false;
+                        }
+                        break;
+                    
+                    case 8:
+     
+                        b.text(d.error.info+' '+moment(d.ctx).format('DD-MM-YYYY HH:mm'));
+                        alternateFun = function(e) {
+                            restoreText();
+                            alternateFun=null;
+                            return false;
+                        }
+                        break;
                 }
                 
-            });
+            }
             
+            tryStart(startSuccess,startError);            
             return false;
         }
         
@@ -211,23 +247,22 @@ module.exports = function (server) {
         });
     }
     
-    const displayEvents = function(events,tableSelector) {
+    const displayEvents = function(events,tableSelector,name,options,lang,renderRightColumn) {
         
         if (!$(tableSelector).hasClass('dataTable')) {
         
             $(tableSelector).DataTable({
                 language: {
-                    url: dtlang('en')
+                    url: dtlang(lang)
                 },
                 columns: [{
-                    title: 'Name',
-                    data: 'title'
+                    title: name,
+                    data: 'title',
+                    width: '50%'
                 },{
-                    title: 'Opt',
+                    title: options,
                     sortable: false,
-                    render: function ( data, type, full, meta ) {
-                        return '';
-                    }
+                    render: renderRightColumn
                 }],
                 order: []
             });

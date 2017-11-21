@@ -36,28 +36,211 @@
             font-size: 5em;
         }
         
-        .dataTables_wrapper {
-            margin-bottom: 100px;
+        
+        a.arrow {
+            cursor: pointer;
+            transition: all 1s;
         }
         
+        a.link {
+            cursor: pointer;
+        }
+        
+        div.form {
+            height: 0;
+            transition: all 1s;
+        }
+        
+        a.yt img{
+            padding-top: 4px;
+            display: inline-block;
+        }
+
+        #eventSave {
+            display: none;
+            transition: all 1s;
+            border: solid 1px #333;
+            padding: 30px 10px 20px 10px;
+        }
+        #eventSave input {
+            width: 100%;
+        }
+        #eventSave .error {
+            border: solid 2px red;
+        }
+        #eventSave a.token {
+            float: right;
+            background-color: red;
+        }
+        #eventSave textarea {
+            height: 35px;
+        }
+        #eventSave div textarea:focus {
+            height: 200px;
+        }
+        
+        #eventSave div {
+          position: relative;
+          margin: 0 0 30px 0;
+          font-family: impact;
+          font-size: 16px
+        }
+        #eventSave div input,#eventSave div textarea {
+          padding: 5px;
+          width: 100%;
+          transition: all 1s;
+          border: 2px solid #999;
+          font-size: 17px;
+          color: #666
+        }
+        #eventSave div label {
+          position: absolute;
+          left:0px;
+          top: 0;
+          line-height:15px;
+          transition: all 0.5s;
+          overflow: hidden;
+          color: #999;
+          white-space: nowrap;
+          z-index: 1;
+          opacity: 0;
+          font-size: 12px;
+        }
+        #eventSave div input:focus + label,
+        #eventSave div textarea:focus + label{
+          opacity: 1;
+          top: -18px;  
+        }
+        #eventSave div input:focus,
+        #eventSave div textarea:focus{
+          outline: none;
+          border-color: rgba(82, 168, 236, 0.8);
+        }	
+
+        div.bottom {
+            height: 100px;
+        }
+        
+        table.events td {
+            vertical-align: top;
+        }
+        
+        #eventSave a.save {
+            padding: 8px;
+            border: 2px #666 solid;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #aaa;
+        }
+        #eventSave a.save:hover {
+            background-color: #888;
+            color: #fff;
+        }
+        
+        #copyScript {
+            position: absolute;
+            width: 400px;
+            height: 250px;
+            display: none;
+            border: 1px solid #444;
+            border-radius: 5px;
+            padding: 10px;
+            outline: none;
+        }
     </style>
 </head>
 <body>
     
 <a class="plus">&#43;</a>
 <table class="events"></table>
+<div class="bottom"></div>
+<textarea id="copyScript" readonly="readonly"></textarea>
+<form id="eventSave">
+	<div>
+		<input type="text" placeholder="youtube id"  name="event" value=""/>
+		<label for="event">Youtube id:</label>
+	</div>
+	<div>
+		<input type="text" placeholder="hangout id" name="hangout" value=""/>
+		<label for="hangout">Hangout id:</label>
+	</div>
+	<div>
+		<textarea name="users" placeholder="Dodaj użytkowników, którzy mogą oglądać"></textarea>
+		<label for="users">Dodaj użytkowników, którzy mogą oglądać:</label>
+	</div>
+	<div>
+		<textarea name="speakers" placeholder="Dodaj użytkownikow, którzy występują"></textarea>
+		<label for="speakers">Dodaj użytkowników, którzy występują:</label>
+	</div>
+	<div>
+		<input type="text" placeholder="Cena w czasie zajęć" name="price_online" value=""/>
+		<label for="price_online">Cena w czasie zajęć:</label>
+	</div>
+	<div>
+		<input type="text" placeholder="Cena za dostęp ex post" name="price_offline" value=""/>
+		<label for="price_offline">Cena za dostęp ex post:</label>
+	</div>
+	<div>
+		<input type="text" placeholder="Klasa przycisku/linku" name="button" value=""/>
+		<label for="button">Klasa przycisku/linku:</label>
+	</div>
+    
+    <div>
+		<input type="text" placeholder="Tekst przycisku/linku" name="button_title" value=""/>
+		<label for="button">Tekst przycisku/linku:</label>
+	</div>
+    
+	<div>
+		<input type="text" placeholder="Domeny odnośników"  name="referers" value="<?php echo str_replace('/','',preg_replace('~^http[s]*://~','',$session['server']['http_url']));?>"/>
+		<label for="referers">Domeny odnośników:</label>
+	</div>
+	<div>
+		<input type="text" placeholder="Identyfikator DOTPAY"  name="dotpay" value=""/>
+		<label for="dotpay">Identyfikator Dotpay:</label>
+	</div>
+
+	<a class="save">Zapisz</a>
+
+</form>
 </body>
 <script>
     var $;
     var newEventWindow=null;
     var showEvents=function(events) {
-        var e=WebKameleonAuth.YoutubeDisplayEvents(events,'table.events');
+        var e=WebKameleonAuth.YoutubeDisplayEvents(events,'table.events','Nazwa','Opcje','pl',function ( data, type, full, meta ) {
+            var ret='<a class="arrow">&#8681;</a>';
+            ret+='<a class="link">&#128279;</a>';
+            ret+='<a class="yt" href="https://www.youtube.com/my_live_events?filter=scheduled" target="_blank"><img width="20" src="/img/yt-small.png"/></a>';
+            ret+='<div class="form"></div>'
+            return ret;
+        });
 
         setTimeout(function(){
             if (e.length==0) $('table.events').closest('.dataTables_wrapper').hide();
             else $('table.events').closest('.dataTables_wrapper').show();
         },1);        
         
+    }
+    
+    function objectifyForm() {
+		var formArray = $('#eventSave').serializeArray();
+		var returnArray = {};
+		for (var i = 0; i < formArray.length; i++){
+			if (formArray[i]['name'].substr(0,1)=='_') continue;
+			returnArray[formArray[i]['name']] = formArray[i]['value'];
+		}
+		return returnArray;
+	}
+    
+    var saveEvent = function(selector,cb) {
+        WebKameleonAuth.YoutubeSaveEvent(selector.closest('tr').attr('id'),objectifyForm(),function(d){
+            if (typeof(d.events)!='undefined') {
+                cb();
+                setTimeout(showEvents,1500,d.events);
+                
+            }
+            
+        });
     }
     
     var eduStart = function() {
@@ -79,7 +262,7 @@
                 
                 $.get('/youtube/events',function(e){
                     showEvents(e.events);
-                    console.log(e.events);
+                    
                     if (e.events.length==0) {
                         $('a.plus').addClass('plusplus');
                         
@@ -138,6 +321,127 @@
             });
         });
         
+        var showForm = function(arr) {
+            arr.addClass('form');
+            arr.html('&#8679;');
+            arr.siblings('div.form').css('height','auto');
+            $('#eventSave').fadeIn(100).appendTo(arr.siblings('div.form'));
+            
+        }
+        
+        var hideForm = function(arr) {
+            arr.removeClass('form');
+            arr.html('&#8681;');
+            arr.siblings('div.form').height(0);
+            $('#eventSave').fadeOut(1000,function(){
+                $('#eventSave').appendTo('body');
+                
+            });
+            
+        }
+        
+        $(document).on('click','a.link',function(e){
+            
+            var evid=$(this).closest('tr').attr('id');
+            WebKameleonAuth.YoutubeGetEvent(evid,function(d){
+                if (typeof(d.data)=='undefined') {
+                    alert('No data');
+                    return;
+                }
+                if (typeof(d.data.hangout)=='undefined' || d.data.hangout.trim()=='') {
+                    alert('No hangout');
+                    return;
+                }
+
+                var rand='event'+Date.now();
+                var scr='<script id="'+rand+'">';
+                scr+='var '+rand+'=function(){\n';
+                scr+='WebKameleonAuth.GoogleInit({\nlang:document.documentElement.lang,referer:""});';
+                scr+='WebKameleonAuth.YoutubeStartEvent("'+d.data.button+'",';
+                scr+='"'+evid+'",';
+                scr+='"#'+rand+'",';
+                scr+='"'+d.data.button_title+'"';
+                scr+=');';
+                scr+='};(function (d,w,a,m){\n';
+                scr+='s=d.createElement("script");';
+                scr+='s.async=1;s.src="http://'+location.host+'/client.js?callback='+rand+'";';
+                scr+='m=d.getElementById("'+rand+'");';
+                scr+='m.parentNode.insertBefore(s,m);'
+                scr+='})(document,window);</scr';
+                scr+='ipt>';
+                
+                $('#copyScript').fadeIn(1000).val(scr).css({
+                    top: e.originalEvent.clientY+20,
+                    left: e.originalEvent.clientX+20
+                });
+            });
+        });
+        
+        $(document).on('click','a.arrow',function(e){
+            var arr=$(this);
+            if ($(this).hasClass('form')) {
+                
+                saveEvent(arr,function(){
+                    hideForm(arr);
+                });
+                
+                
+                
+                
+            } else {
+                $('#eventSave input,#eventSave textarea').val('');
+                WebKameleonAuth.YoutubeGetEvent(arr.closest('tr').attr('id'),function(d){
+                    if (typeof(d.data)!='undefined') {
+                        for (var k in d.data) {
+                    
+                            if (typeof(d.data[k])=='object') {
+                                $('#eventSave textarea[name="'+k+'"]').val(d.data[k].join("\n"));
+                                
+                            } else {
+                                $('#eventSave input[name="'+k+'"]').val(d.data[k]);
+                            }
+                        }
+                        showForm(arr);
+                        if (typeof(d.data.hangout)=='undefined' || d.data.hangout.trim()=='') {
+                            $('#eventSave input[name="hangout"]').addClass('error');
+                        } else {
+                            $('#eventSave input[name="hangout"]').removeClass('error');
+                        }
+                    } else {
+                        if (typeof(d.error)!='undefined') {
+                            console.log(d.error.info);
+                        }
+                    }                
+                
+                });
+                
+
+            }
+        });
+        
+        $('#eventSave input[name="hangout"]').blur(function(){
+            if ($(this).val().trim()!='') {
+                $(this).removeClass('error');
+            } else {
+                $(this).addClass('error');
+            }
+        });
+        
+        $('#eventSave a.save').click(function(){
+            var arr=$(this).closest('td').find('a.arrow');
+            saveEvent(arr,function(){
+                hideForm(arr);
+            });
+        });
+        
+        $('#copyScript').focus(function(){
+            $(this).select();
+            document.execCommand('copy');
+        });
+        
+        $('#copyScript').mouseout(function(){
+            $(this).fadeOut(1000);
+        });
     }
 </script>
 <script src="/client.js?callback=eduStart"></script>
