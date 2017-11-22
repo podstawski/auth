@@ -152,7 +152,11 @@ module.exports = function (server) {
                     b.text(oldText);
                 }
                 
-                if(win_yt!=null) win_yt.close();
+                if(win_yt!=null) {
+                    win_yt.close();
+                    win_yt=null;
+                }
+                
                 
                 switch(d.error.number) {
                     case 9:
@@ -182,13 +186,9 @@ module.exports = function (server) {
                         break;
                     
                     case 8:
-     
                         b.text(d.error.info+' '+moment(d.ctx).format('DD-MM-YYYY HH:mm'));
-                        alternateFun = function(e) {
-                            restoreText();
-                            alternateFun=null;
-                            return false;
-                        }
+                        alternateFun=null;
+                        
                         break;
                 }
                 

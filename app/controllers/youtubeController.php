@@ -196,7 +196,7 @@ class youtubeController extends Controller {
             
             $ret=['yt'=>$id,'chat'=>true,'close'=>$snippet->actualEndTime?true:false];
             
-            if ($imtheauthor) {
+            if ($imtheauthor && !$snippet->actualEndTime) {
                 $ret['hangout']=$event['hangout'];
                 return $ret;
             }
