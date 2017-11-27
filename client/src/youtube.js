@@ -32,27 +32,58 @@ module.exports = function (server) {
         return 'https://hangouts.google.com/hangouts/_/ytl/'+id;
     }
     
-    const eventStart = function(button,evid,buttonInsertAfter,buttonInsertText) {
+
+    
+    const eventStart = function(buttonClass,evid,buttonInsertAfter,buttonInsertText) {
         var self=this;
-        var alternateFun=null;
+    
+        var win_ch=null;
+        var win_yt=null;
+        var yt_play = false;
+        var button = null;
         
+        var startSuccess, startError;
+        var clickFun;
+        var globalData;
+        var oldText;
+        var yt_x,yt_y,yt_w,yt_h,ch_x,ch_y,ch_w,ch_h;
+        var stopLoop;
         
         if (buttonInsertAfter!=null) {
             var id='but'+buttonInsertAfter.replace('#','');
-            var a='<a id="'+id+'" class="'+button+'" href="#">'+buttonInsertText+'</a>';
+            var a='<a id="'+id+'" class="'+buttonClass+'" href="#">'+buttonInsertText+'</a>';
             $(buttonInsertAfter).parent().append(a);
-            button='#'+id;
+            buttonClass='#'+id;
         }
         
-        var win_ch=null;
-        var win_yt=null;
+        
+ 
+        const restoreText=function(){
+            button.text(oldText);
+        }
 
-        var buttonClick=function(e) {
-            if (typeof(alternateFun)=='function') return alternateFun(e);
+        const changeClickService = function(service,ctx) {
             
-            var b=$(this);
+            clickFun=service;
+        }
+
+        const tryStart = function(successFun,errorFun) {
+            ajax.get('/youtube/start/'+evid,function(d){
+                if (typeof(d.yt)!='undefined') {
+                    
+                    if (typeof(successFun)=='function') successFun(d);
+                }                        
+                if (typeof(d.error)!='undefined') {
+                    
+                    if (typeof(errorFun)=='function') errorFun(d);
+                }
+            });                
+        }
+
+        const openYTwindowService = function(e) {
+
             var w=window.innerWidth;
-            var yt_x,yt_y,yt_w,yt_h,ch_x,ch_y,ch_w,ch_h;
+            
             if (w>=640) {
                 yt_w=Math.round((w*2)/3);
                 if (yt_w>940) yt_w=940;
@@ -69,142 +100,164 @@ module.exports = function (server) {
                 ch_x=0;
             }
             
-            var stopLoop=false;
+            stopLoop=false;
             yt_h=ch_h=Math.round((yt_w*9)/16)+120;
             
-            if (win_yt==null) {   
-                win_yt=openWindow('','webkameleon_auth_yt',yt_x,yt_y,yt_w,yt_h,function(){
-                    if (win_ch!=null) win_ch.close();
-                    win_yt=null;
-                    stopLoop=true;
+   
+            win_yt=openWindow('','webkameleon_auth_yt',yt_x,yt_y,yt_w,yt_h,function(){
+                if (win_ch!=null) win_ch.close();
+                win_yt=null;
+                if (yt_play) {
+                    changeClickService(openYTwindowService,'window closed');
                     ajax.get('/youtube/stop/'+evid);
-                });
-            } else {
-                win_yt.focus();
-            }
-            
-            var tryStart = function(successFun,errorFun) {
-                ajax.get('/youtube/start/'+evid,function(d){
-                    if (typeof(d.yt)!='undefined') {
-                        if (successFun!=null) successFun(d);
-                    }                        
-                    if (typeof(d.error)!='undefined') {
-                        if (errorFun!=null) errorFun(d);
-                        
-                    }
-                    
-                });                
-            }
-            
-            var startSuccess = function(d) {
-                var yt_url=getYTurl(d.yt);
-                if (typeof(d.hangout)!='undefined')
-                    yt_url=getHOurl(d.hangout);
-                if (d.chat && ch_x>0) {
-                    var fname='top_'+Math.random();
-                    fname=fname.replace('\.','_');
-                    window[fname] = function () {
-                        win_ch=openWindow('','webkameleon_auth_ch',ch_x,ch_y,ch_w,ch_h);
-                        
-                        win_yt.location.href=yt_url;
-                        win_ch.location.href=server+'/youtube/chat/'+evid;
-                    }
-                    win_yt.document.write('<div align="center"><img id="yt" onclick="top.opener.'+fname+'()" src="http://auth.webkameleon.com/img/yt.jpg" width="99%" style="cursor:pointer"/></div>')
-                
-                    const changeLoop=function() {
-                        if (stopLoop) return;
-                        ajax.get('/youtube/change/'+evid,function(d){
-                            if (typeof(d.hangout)!='undefined' && d.hangout.length>0) {
-                                win_yt.location.href=getHOurl(d.hangout);
-                                ajax.post('/youtube/change/'+evid,{hangout:''},function(){
-                                    setTimeout(changeLoop,1000);
-                                });
-                            } else if (typeof(d.yt)!='undefined' && d.yt.length>0) {
-                                win_yt.location.href=getYTurl(d.yt);
-                                ajax.post('/youtube/change/'+evid,{yt:''},function(){
-                                    setTimeout(changeLoop,1000);
-                                });
-                            } else {
-                                setTimeout(changeLoop,1000);
-                            }
-                            
-                            
-                        });
-                    }
-                    changeLoop();
-                
-                } else {
-                    win_yt.location.href=yt_url;
-                    
-                    
                 }
+                stopLoop=true;
                 
+            });
+                
+                            
+            
+            
+            tryStart(startSuccess,startError);            
+            return false;            
+        }
+        
+        const focusWindowService = function(e) {
+            if (win_yt!=null) {
+                win_yt.focus();
+                if (win_ch!=null) win_ch.focus();
+            } else {
+                changeClickService(openYTwindowService,'no yt window');
+            }
+            
+            return false;            
+        }
+        
+
+        
+        startSuccess = function(d) {
+            
+            
+            changeClickService(focusWindowService,'focus');
+            
+            
+            var yt_url=getYTurl(d.yt);
+            if (typeof(d.hangout)!='undefined')
+                yt_url=getHOurl(d.hangout);
+            if (d.chat && ch_x>0) {
+                var fname='top_'+Math.random();
+                fname=fname.replace('\.','_');
+                window[fname] = function () {
+                    win_ch=openWindow('','webkameleon_auth_ch',ch_x,ch_y,ch_w,ch_h);
+                    yt_play=true;
+                    win_yt.location.href=yt_url;
+                    win_ch.location.href=server+'/youtube/chat/'+evid;
+                }
+                win_yt.document.write('<div align="center"><img id="yt" onclick="top.opener.'+fname+'()" src="http://auth.webkameleon.com/img/yt.jpg" width="99%" style="cursor:pointer"/></div>')
+            
+                const changeLoop=function() {
+                    if (stopLoop) return;
+                    ajax.get('/youtube/change/'+evid,function(d){
+                        if (typeof(d.hangout)!='undefined' && d.hangout.length>0) {
+                            win_yt.location.href=getHOurl(d.hangout);
+                            ajax.post('/youtube/change/'+evid,{hangout:''},function(){
+                                setTimeout(changeLoop,1000);
+                            });
+                        } else if (typeof(d.yt)!='undefined' && d.yt.length>0) {
+                            win_yt.location.href=getYTurl(d.yt);
+                            ajax.post('/youtube/change/'+evid,{yt:''},function(){
+                                setTimeout(changeLoop,1000);
+                            });
+                        } else {
+                            setTimeout(changeLoop,1000);
+                        }
+                        
+                        
+                    });
+                }
+                changeLoop();
+            
+            } else {
+                win_yt.location.href=yt_url;
+                yt_play=true;
                 setTimeout(function(){
                     ajax.get('/youtube/stop/'+evid,function(){
                     });
-                },6000);
-                
+                },6000);    
             }
             
-            var startError = function(d) {
-                var oldText=b.text();
-                var restoreText=function(){
-                    b.text(oldText);
-                }
-                
-                if(win_yt!=null) {
-                    win_yt.close();
-                    win_yt=null;
-                }
-                
-                
-                switch(d.error.number) {
-                    case 9:
-                        b.text(d.error.info);
-                        alternateFun = function(e) {
-                            self.GoogleAuth(function(){
-                                restoreText();
-                                alternateFun=null;
-                                
-                                tryStart(null,startError);
-                            });
-                            
-                            return false;
-                        }
-                        break;
-                    
-                    case 7:
-                        b.text(d.error.info+' '+d.ctx);
-                        alternateFun = function(e) {
-                            self.DotpayPayment(d.ctx,evid, function(){
-                                restoreText();
-                                alternateFun=null;
-                                tryStart(null,startError);
-                            });
-                            return false;
-                        }
-                        break;
-                    
-                    case 8:
-                        b.text(d.error.info+' '+moment(d.ctx).format('DD-MM-YYYY HH:mm'));
-                        alternateFun=null;
-                        
-                        break;
-                }
-                
-            }
             
-            tryStart(startSuccess,startError);            
+            
+        }
+        
+        const paymentService = function(e) {
+            self.DotpayPayment(d.ctx,evid, function(){
+                restoreText();
+                changeClickService(openYTwindowService,'after payment');
+                tryStart(null,startError);
+            });
+            return false;           
+        }
+        
+        const loginService = function(e) {
+            self.GoogleAuth(function(){
+                restoreText();
+                changeClickService(openYTwindowService,'after login');
+                tryStart(null,startError);
+            });
+            
             return false;
         }
         
-        $(button).click(buttonClick);
+        startError = function(d) {
+            
+            oldText=button.text();
+            
+            if(win_yt!=null) {
+                win_yt.close();
+                win_yt=null;
+            }
+            
+            
+            switch(d.error.number) {
+                case 9:
+                    button.text(d.error.info);
+                    changeClickService(loginService,'login');
+                    break;
+                
+                case 7:
+                    button.text(d.error.info+' '+d.ctx);
+                    globalData=d;
+                    changeClickService(paymentService,'payment');
+                    break;
+                
+                case 8:
+                    button.text(d.error.info+' '+moment(d.ctx).format('DD-MM-YYYY HH:mm'));
+                    changeClickService(openYTwindowService,'future');
+                    break;
+            }
+            
+        
+        }
+
+
+
+        
+        
+        const buttonClick=function(e) {
+            button=$(this);
+            if (typeof(clickFun)=='function') return clickFun(e);
+            return false;            
+        }
+        
+        changeClickService(openYTwindowService,'start');
+        $(buttonClass).click(buttonClick);
         
     }
     
     const eventBye = function(id,cb) {
         ajax.get('/youtube/unjoin/'+id,function(d){
-            console.log('unjoin',d);
+           
             if (typeof(d.yt)!='undefined') {
                 
                 ajax.post('/youtube/change/'+id,{yt:d.yt},function(){

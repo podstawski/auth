@@ -16,15 +16,26 @@ class eventModel {
         return json_decode(file_get_contents($this->dir.'/data.json'),true);
     }
     
+    
+    
+    protected function _save($file,$data) {
+        while (file_exists($this->dir.'/'.$file.'.lock')) {
+                usleep(rand(50,1000));
+        }
+        touch($this->dir.'/'.$file.'.lock');
+        file_put_contents($this->dir.'/'.$file,json_encode($data));
+        unlink($this->dir.'/'.$file.'.lock');
+    }
+    
     public function save($data) {
         $data=array_merge($this->get(),$data);
-        file_put_contents($this->dir.'/data.json',json_encode($data));
+        $this->_save('data.json',$data);
         return $data;
     }
     
     public function queue($data=null) {
         if ($data!=null) {
-            file_put_contents($this->dir.'/queue.json',json_encode($data));
+            $this->_save('queue.json',$data);
             return $data;
         }
         if (!file_exists($this->dir.'/queue.json')) return [];
