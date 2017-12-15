@@ -1,0 +1,17 @@
+#yt {
+    width: 99%;
+    cursor: pointer;
+}
+.notice {
+    cursor: pointer;
+    position: absolute;
+    width: 80%;
+    left: 8%;
+    top: 20px;
+    padding: 8px;
+    border: 2px #ddd solid;
+    border-radius: 5px;
+    background-color: rgba(0,0,0,0.65);
+    color: #ddd;
+    font-family: Tahoma, Arial;
+}

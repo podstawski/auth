@@ -199,6 +199,11 @@
 		<label for="dotpay">Identyfikator Dotpay:</label>
 	</div>
 
+	<div>
+		<textarea name="notice" placeholder="Uwagi prawne"></textarea>
+		<label for="notice">Uwagi prawne:</label>
+	</div>
+
 	<a class="save">Zapisz</a>
 
 </form>
@@ -354,12 +359,13 @@
                 }
 
                 var rand='event'+Date.now();
-                var scr='<script id="'+rand+'">';
+                var scr='<script id="'+rand+'" class="'+rand+'">';
+                scr+='if (typeof('+rand+')=="undefined"){';
                 scr+='var '+rand+'=function(){\n';
                 scr+='WebKameleonAuth.GoogleInit({\nlang:document.documentElement.lang,referer:""});';
                 scr+='WebKameleonAuth.YoutubeStartEvent("'+d.data.button+'",';
                 scr+='"'+evid+'",';
-                scr+='"#'+rand+'",';
+                scr+='".'+rand+'",';
                 scr+='"'+d.data.button_title+'"';
                 scr+=');';
                 scr+='};(function (d,w,a,m){\n';
@@ -367,7 +373,7 @@
                 scr+='s.async=1;s.src="http://'+location.host+'/client.js?callback='+rand+'";';
                 scr+='m=d.getElementById("'+rand+'");';
                 scr+='m.parentNode.insertBefore(s,m);'
-                scr+='})(document,window);</scr';
+                scr+='})(document,window);}</scr';
                 scr+='ipt>';
                 
                 $('#copyScript').fadeIn(1000).val(scr).css({
@@ -399,6 +405,7 @@
                                 
                             } else {
                                 $('#eventSave input[name="'+k+'"]').val(d.data[k]);
+                                $('#eventSave textarea[name="'+k+'"]').val(d.data[k]);
                             }
                         }
                         showForm(arr);

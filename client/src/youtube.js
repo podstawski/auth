@@ -50,10 +50,10 @@ module.exports = function (server) {
         var stopLoop;
         
         if (buttonInsertAfter!=null) {
-            var id='but'+buttonInsertAfter.replace('#','');
-            var a='<a id="'+id+'" class="'+buttonClass+'" href="#">'+buttonInsertText+'</a>';
+            var klasa='but'+buttonInsertAfter.replace(/[#.]/,'');
+            var a='<a class="'+buttonClass+' '+klasa+'" href="#">'+buttonInsertText+'</a>';
             $(buttonInsertAfter).parent().append(a);
-            buttonClass='#'+id;
+            buttonClass='.'+klasa;
         }
         
         
@@ -142,9 +142,10 @@ module.exports = function (server) {
             
             
             var yt_url=getYTurl(d.yt);
-            if (typeof(d.hangout)!='undefined')
-                yt_url=getHOurl(d.hangout);
+            if (typeof(d.hangout)!='undefined') yt_url=getHOurl(d.hangout);
+            
             if (d.chat && ch_x>0) {
+                if (d.author) yt_url='https://www.youtube.com/my_live_events?filter=scheduled';
                 var fname='top_'+Math.random();
                 fname=fname.replace('\.','_');
                 window[fname] = function () {
@@ -153,7 +154,14 @@ module.exports = function (server) {
                     win_yt.location.href=yt_url;
                     win_ch.location.href=server+'/youtube/chat/'+evid;
                 }
-                win_yt.document.write('<div align="center"><img id="yt" onclick="top.opener.'+fname+'()" src="http://auth.webkameleon.com/img/yt.jpg" width="99%" style="cursor:pointer"/></div>')
+                var html2write='<link rel="stylesheet" href="'+server+'/css/edu.css">';
+                var onClick=' onclick="top.opener.'+fname+'()"';
+                html2write+='<div align="center"><img id="yt"'+onClick+' src="http://auth.webkameleon.com/img/yt.jpg"/></div>';
+                console.log('d',d);
+                if (typeof(d.notice)!='undefined' && d.notice.length>0) {
+                    html2write+='<div class="notice"'+onClick+'>'+d.notice.replace(/\n/g,'<br/>')+'</div>';
+                }
+                win_yt.document.write(html2write);
             
                 const changeLoop=function() {
                     if (stopLoop) return;
@@ -191,7 +199,7 @@ module.exports = function (server) {
         }
         
         const paymentService = function(e) {
-            self.DotpayPayment(d.ctx,evid, function(){
+            self.DotpayPayment(globalData.ctx,evid, function(){
                 restoreText();
                 changeClickService(openYTwindowService,'after payment');
                 tryStart(null,startError);

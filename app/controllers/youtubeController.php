@@ -170,12 +170,20 @@ class youtubeController extends Controller {
         $imtheauthor=$event['author']==$this->myid;
         $snippet=$this->_get_event($id,$imtheauthor?null:$event['author'])->items[0]->snippet;
         
+        $price=$snippet->actualEndTime?$event['price_offline']:$event['price_online'];
     
-        if (!isset($event['users']) || array_search($this->me,$event['users'])===false) {
-            $this->error(7,$snippet->actualEndTime?$event['price_offline']:$event['price_online']);
+        if (strlen(trim($price))) {
+            if (!isset($event['users']) || array_search($this->me,$event['users'])===false) {
+                $this->error(7,$price);
+            }            
+        } else {
+            if (!isset($event['users']) || array_search($this->me,$event['users'])===false) {
+                if (!isset($event['users'])) $event['users']=[];
+                $event['users'][]=$this->me;
+                $eventdata->save($event);
+            }
         }
-        
-        
+
         
         if ($snippet->actualStartTime || $imtheauthor) {
             
@@ -194,7 +202,9 @@ class youtubeController extends Controller {
             $event['start']=time();
             $eventdata->save($event);
             
-            $ret=['yt'=>$id,'chat'=>true,'close'=>$snippet->actualEndTime?true:false];
+            $ret=['yt'=>$id,'chat'=>true,'close'=>$snippet->actualEndTime?true:false,'author'=>$imtheauthor];
+            
+            if(isset($event['notice'])) $ret['notice']=$event['notice'];
             
             if ($imtheauthor && !$snippet->actualEndTime) {
                 $ret['hangout']=$event['hangout'];
