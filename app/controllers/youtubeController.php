@@ -111,6 +111,7 @@ class youtubeController extends Controller {
             $users=trim(preg_replace("/[\n]+/","\n",$users));
             if (strlen($users)==0) $this->data['users']=[];
             else $this->data['users']=array_unique(explode("\n",$users));
+            sort($this->data['users']);
             
             if (array_search($this->me,$this->data['users'])===false) $this->data['users'][]=$this->me;
         }
@@ -121,6 +122,7 @@ class youtubeController extends Controller {
             $speakers=trim(preg_replace("/[\n]+/","\n",$speakers));
             if (strlen($speakers)==0) $this->data['speakers']=[];
             else $this->data['speakers']=array_unique(explode("\n",$speakers));
+            sort($this->data['speakers']);
         }
         
         $this->data['title']=$_event->items[0]->snippet->title;
@@ -184,8 +186,9 @@ class youtubeController extends Controller {
             }
         }
 
+        $imspeaker = isset($event['speakers']) && array_search($this->me,$event['speakers'])!==false;
         
-        if ($snippet->actualStartTime || $imtheauthor) {
+        if ($snippet->actualStartTime || $imtheauthor || $imspeaker) {
             
             $may_watch=true;
             
@@ -212,7 +215,7 @@ class youtubeController extends Controller {
             }
             
             if ($snippet->actualEndTime) $ret['chat'] = false;
-            elseif ( isset($event['speakers']) && array_search($this->me,$event['speakers'])!==false) $ret['hangout']=$event['hangout'];
+            elseif ( $imspeaker ) $ret['hangout']=$event['hangout'];
             
             return $ret;
                 

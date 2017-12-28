@@ -154,9 +154,11 @@ module.exports = function (server) {
                     win_yt.location.href=yt_url;
                     win_ch.location.href=server+'/youtube/chat/'+evid;
                 }
-                var html2write='<link rel="stylesheet" href="'+server+'/css/edu.css">';
+                var html2write='<head><title>START</title><meta charset="utf-8">';
+                html2write+='<link rel="stylesheet" href="'+server+'/css/edu.css"></head>';
                 var onClick=' onclick="top.opener.'+fname+'()"';
-                html2write+='<div align="center"><img id="yt"'+onClick+' src="http://auth.webkameleon.com/img/yt.jpg"/></div>';
+                html2write+='<body class="start"><div align="center"><img id="yt"'+onClick+' src="http://auth.webkameleon.com/img/yt.jpg"/></div>';
+                html2write+='</body>';
                 console.log('d',d);
                 if (typeof(d.notice)!='undefined' && d.notice.length>0) {
                     html2write+='<div class="notice"'+onClick+'>'+d.notice.replace(/\n/g,'<br/>')+'</div>';

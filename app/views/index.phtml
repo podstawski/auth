@@ -147,6 +147,14 @@
             padding: 10px;
             outline: none;
         }
+        
+        #massOp {
+            display: none;
+            
+        }
+        #massOp input.text {
+            width:50%;
+        }
     </style>
 </head>
 <body>
@@ -207,6 +215,10 @@
 	<a class="save">Zapisz</a>
 
 </form>
+<form id="massOp">
+    <input type="text" placeholder="dopisz uzytkownika" class="text" name="users"/>
+    <input type="button" value="go!" class="submit"/>
+</form>
 </body>
 <script>
     var $;
@@ -216,7 +228,8 @@
             var ret='<a class="arrow">&#8681;</a>';
             ret+='<a class="link">&#128279;</a>';
             ret+='<a class="yt" href="https://www.youtube.com/my_live_events?filter=scheduled" target="_blank"><img width="20" src="/img/yt-small.png"/></a>';
-            ret+='<div class="form"></div>'
+            ret+='<input class="chb" type="checkbox" rel="'+full.DT_RowId+'"/>';
+            ret+='<div class="form"></div>';
             return ret;
         });
 
@@ -449,6 +462,49 @@
         $('#copyScript').mouseout(function(){
             $(this).fadeOut(1000);
         });
+        
+        
+        $(document).on('click','input.chb',function(e){
+            var chbx=$('input.chb:checked');
+            if (chbx.length==1) {
+                $('#massOp').show();
+                $('html, body').animate({
+                    scrollTop: $("#massOp").offset().top
+                }, 2000);
+                $('#massOp').children().first().focus();
+            }
+        });
+        
+        var massoperation = function() {
+            var chbx=$('input.chb:checked');
+            if (chbx.length==0) {
+                $('#massOp').hide();
+                return;
+            }
+            var id=chbx.first().attr('rel');
+            var moreusers=$('#massOp input[name="users"]').val();
+            
+            if (moreusers.length==0) return; 
+            
+            WebKameleonAuth.YoutubeGetEvent(id,function(d){
+                var users=typeof(d.data)=='undefined'  ||typeof(d.data.users)=='undefined' ?[]:d.data.users;
+                
+                var data={};
+                if (typeof(d.data)!='undefined') data.event=d.data.event;
+                //data.users=moreusers;
+                data.users=users.join(',')+','+moreusers;
+                
+                WebKameleonAuth.YoutubeSaveEvent(id,data,function(d){
+                    chbx.first().prop('checked',false);
+                    massoperation();
+                });
+          
+                
+
+            });
+        }
+        
+        $('#massOp .submit').click(massoperation);
     }
 </script>
 <script src="/client.js?callback=eduStart"></script>
