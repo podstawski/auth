@@ -217,6 +217,8 @@ class youtubeController extends Controller {
             if ($snippet->actualEndTime) $ret['chat'] = false;
             elseif ( $imspeaker ) $ret['hangout']=$event['hangout'];
             
+            Bootstrap::$main->log('start',[$this->me,$event['title']]);
+            
             return $ret;
                 
         }

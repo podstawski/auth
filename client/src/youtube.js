@@ -52,7 +52,7 @@ module.exports = function (server) {
         if (buttonInsertAfter!=null) {
             var klasa='but'+buttonInsertAfter.replace(/[#.]/,'');
             var a='<a class="'+buttonClass+' '+klasa+'" href="#">'+buttonInsertText+'</a>';
-            $(buttonInsertAfter).parent().append(a);
+            $(buttonInsertAfter).after(a);
             buttonClass='.'+klasa;
         }
         

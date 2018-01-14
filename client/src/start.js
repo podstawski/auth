@@ -4,10 +4,15 @@ const google_auth_obj = require('./google.auth.js'),
     jquery=require('jquery');
 
 let WebKameleonAuthObj = function(w,d) {
+    
+
     var server;
+       
     var s=d.getElementsByTagName('script');
     for(var i=s.length-1;i>=0;i--) {
+        
         if (s[i].src&&s[i].src.indexOf('webkameleon-auth-client.js')>0) {
+          
             server=s[i].src.replace(/\/webkameleon-auth-client\.js.*/,'');
             
             var callback_i=s[i].src.indexOf('callback=');
@@ -19,13 +24,15 @@ let WebKameleonAuthObj = function(w,d) {
                 if (typeof(window[callback])=='function') setTimeout(window[callback],10);
                 
             }
-            break;
+            //break;
         }
     }
+    
+    
     const google_auth = google_auth_obj(server),
             youtube = youtube_obj(server),
             dotpay = dotpay_obj(server);
-    
+
     
     
     return {
@@ -51,5 +58,5 @@ let WebKameleonAuthObj = function(w,d) {
     
 }
 
-window.WebKameleonAuth = new WebKameleonAuthObj(window,window.document);
+if (typeof(window.WebKameleonAuth)=='undefined') window.WebKameleonAuth = new WebKameleonAuthObj(window,window.document);
 

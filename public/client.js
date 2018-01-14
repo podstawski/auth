@@ -1,10 +1,8 @@
-(function(w,d,u,a,s){
-        if (typeof(w['WebKameleonAuth'])!='undefined') return;        
+(function(w,d,u,a){
+        //if (typeof(w['WebKameleonAuth'])!='undefined') return;
+        
         a=d.createElement('script'),s=d.getElementsByTagName('script');
-        for(var i=s.length-1;i>=0;i--) {
-            if (s[i].src&&s[i].src.indexOf('client.js')>0) {
-                a.async=1,a.src=s[i].src.replace('client.js',u);
-                s[0].parentNode.insertBefore(a,s[0]);break;
-            }
-        }
+        a.async=1,a.src=d.currentScript.src.replace('client.js',u);
+        d.currentScript.parentNode.insertBefore(a,d.currentScript);
+        
 })(window,document,'webkameleon-auth-client.js');

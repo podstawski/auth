@@ -54,7 +54,7 @@ class payController extends Controller {
         $id=isset($event['dotpay'])?$event['dotpay']:'-';
         
         if (isset($config[$id]) && isset($config[$id]['pin'])) {            
-            if (isset($this->data['signature']) && $this->data['signature']==@$this->signature($config[$id]['pin'],$id,$this->data)) {
+            if (isset($this->data['signature']) && $this->data['signature']==@$this->signature($config[$id]['pin'],$id,$this->data) && isset($this->data['operation_status']) && $this->data['operation_status']=='completed') {
                 $this->grant(base64_decode($this->data['control']),$this->id);
             } else {
                 Bootstrap::$main->log('payment',[$this->id,'Signature',@$this->signature($config[$id]['pin'],$id,$this->data)]);
