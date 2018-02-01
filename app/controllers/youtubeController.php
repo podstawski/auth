@@ -28,14 +28,20 @@ class youtubeController extends Controller {
         $eventdata=new eventModel($this->id);
         $event=$eventdata->get();
         
-        if (!isset($event['event'])) $this->error(6);
+        if (!isset($event['event'])) {
+            $this->error(6);
+        }
         $id=$event['event'];
         
         if (!$this->client->getAccessToken()) $this->error(12);
         
         $_event=$this->_get_event($id);
         
-        if (!isset($_event->items) || count($_event->items)==0) $this->error(6);
+        if (!isset($_event->items) || count($_event->items)==0) {
+            $user=new userModel($this->myid);
+            $user->rmevent($this->id);
+            $this->error(6);
+        }
         
         return ['yt'=>$_event->items[0],'data'=>$event];
     }

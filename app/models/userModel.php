@@ -32,6 +32,15 @@ class userModel {
         return $ret;
     }
     
+    public function rmevent($id) {
+        $events=$this->events();
+
+        if (isset($events[$id])) {
+            unset($events[$id]);
+            file_put_contents($this->dir.'/events.json',json_encode($events));
+        }
+    }
+    
     public function storeToken($token,$scope) {
         $scopes=array_unique(array_merge($this->scopes(),explode(',',$scope)));
         file_put_contents($this->dir.'/scopes.json',json_encode($scopes));
