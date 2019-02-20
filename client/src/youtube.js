@@ -157,7 +157,7 @@ module.exports = function (server) {
                 var html2write='<head><title>START</title><meta charset="utf-8">';
                 html2write+='<link rel="stylesheet" href="'+server+'/css/edu.css"></head>';
                 var onClick=' onclick="top.opener.'+fname+'()"';
-                html2write+='<body class="start"><div align="center"><img id="yt"'+onClick+' src="http://auth.webkameleon.com/img/yt.jpg"/></div>';
+                html2write+='<body class="start"><div align="center"><img id="yt"'+onClick+' src="https://auth.webkameleon.com/img/yt.jpg"/></div>';
                 html2write+='</body>';
                 console.log('d',d);
                 if (typeof(d.notice)!='undefined' && d.notice.length>0) {

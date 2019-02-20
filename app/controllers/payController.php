@@ -92,8 +92,8 @@ class payController extends Controller {
             'lastname' => $auth['last_name'],
             'email' => $auth['email'],
             'type' => '0',
-            'url' => 'http://'.$_SERVER['HTTP_HOST'].'/close.html',
-            'urlc' => 'http://'.$_SERVER['HTTP_HOST'].'/pay/dotpay/'.$this->id,
+            'url' => 'https://'.$_SERVER['HTTP_HOST'].'/close.html',
+            'urlc' => 'https://'.$_SERVER['HTTP_HOST'].'/pay/dotpay/'.$this->id,
             'description' => $event['title'],
             'control' => base64_encode($auth['id']),
         ];

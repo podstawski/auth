@@ -170,7 +170,7 @@ class googleController extends Controller {
         $client->addScope($scopes);
         $client->setAccessType("offline");
         $client->setIncludeGrantedScopes(true); 
-        $redirect_uri = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+        $redirect_uri = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
         if ($pos=strpos($redirect_uri,'?')) $redirect_uri=substr($redirect_uri,0,$pos);
         $client->setRedirectUri($redirect_uri);
         
